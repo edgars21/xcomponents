@@ -7,22 +7,23 @@ import {
   children,
   type Accessor,
   untrack,
+  onMount
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { stylex, type StyleXValidSolidType } from "@stylex/solid";
 import ProgressCircle from "@xcomponents/progress-circle";
 import Icon, { type Props as IconProps } from "@xcomponents/icon";
 import { type ToAccessorsCfg } from "@xcomponents/shared";
-export type InputRefComponent = Component<{
-  ref?: (el: HTMLInputElement) => void;
-}>;
+export type InputRefComponent = {
+  ref?: (el: HTMLElement) => void;
+};
 
 
 type Props = Constructor &
   Omit<Slots, "defaultSlot"> & { children?: Slots["defaultSlot"] } & Events &
-  ApiBindings;
+  ApiBindings; 
 
-interface Constructor {
+type Constructor = {
   rootStylex?: StyleXValidSolidType;
   size?: "small" | "medium" | "large";
   variant?: "solid" | "outline" | "ghost" | "link";
@@ -33,7 +34,7 @@ interface Constructor {
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"];
   href?: string;
-}
+} & InputRefComponent
 
 interface Slots {
   defaultSlot?: JSX.Element;
@@ -190,6 +191,14 @@ export default function Button(p: Props) {
     }
   }
 
+  let rootElRef : HTMLElement | undefined;
+
+  onMount(() => {
+    if (constructor.ref) {
+      constructor.ref(rootElRef!);
+    }
+  })
+
   const caretJsx = constructor.caret ? <Icon name="ChevronDown" /> : null;
 
   const startAdornmentJsx = (() => {
@@ -225,6 +234,7 @@ export default function Button(p: Props) {
       }}
       onClick={events.onClick}
       ref={(el: HTMLElement) => {
+        rootElRef = el;
         stylex(() => [
           el,
           {

@@ -27,3 +27,20 @@ export type ToAccessors<T> = ToAccessorsCfg<T, false, false>;
 export type ToAccessorsOrValue<T> = ToAccessorsCfg<T, true, false>;
 export type ToOptionalAccessors<T> = ToAccessorsCfg<T, false, true>;
 export type ToOptionalAccessorsOrValue<T> = ToAccessorsCfg<T, true, true>;
+
+
+export function createEventListenerWithCleanupFactory() {
+  const listeners: [EventTarget, string, (e: Event) => void][] = [];
+
+  return [
+    (target: EventTarget, event: string, handler: (e: Event) => void) => {
+      target.addEventListener(event, handler);
+      listeners.push([target, event, handler]);
+    },
+    () => {
+      listeners.forEach(([target, event, handler]) => {
+        target.removeEventListener(event, handler);
+      });
+    },
+  ] as const;
+}

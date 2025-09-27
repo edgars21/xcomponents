@@ -1,22 +1,41 @@
 // import Icon from "@xcomponents/icon";
 import Button from "@xcomponents/button";
+import Popper from "@xcomponents/popper";
 // import Test from "./Test";
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 
 export default function App() {
-  const [loading, setLoading] = createSignal(false);
+  const [open, setOpen] = createSignal(false);
+  const [buttonEl, setButtonEl] = createSignal<HTMLButtonElement | undefined>(
+    undefined
+  );
+
   return (
-    <div style="">
+    <div
+      style={{
+        position: "fixed",
+        width: "100%",
+        height: "100%",
+        display: "grid",
+        "place-items": "center",
+      }}
+    >
       <div style="display: flex; flex-gap: 10px">
         <Button
+          ref={setButtonEl}
           rootStylex={{ width: "unset", height: "unset" }}
           size="large"
           icon="Activity"
           caret
           labelSlot="View"
-          setLoading={loading}
-          onClick={(e) => loading() ? setLoading(false) : setLoading(true)}
-        >something else</Button>
+        >
+          Click Me
+        </Button>
+        <Show when={buttonEl()}>
+          <Popper anchor={buttonEl()!} setOpen={open} placement="bottom" arrow trigger="click">
+            Stuff inside
+          </Popper>
+        </Show>
       </div>
     </div>
   );

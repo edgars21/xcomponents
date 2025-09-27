@@ -1,7 +1,9 @@
 // ProgressCircle.tsx
 import { Component, JSX, createMemo, splitProps, Show } from "solid-js";
+import { stylex, type StyleXValidSolidType } from "@stylex/solid";
 
 type Props = {
+  stylex?: StyleXValidSolidType;
   /** 0–100; omit or set `indeterminate: true` for spinner mode */
   value?: number;
   /** Diameter in px */
@@ -28,9 +30,6 @@ type Props = {
   indeterminate?: boolean;
   /** Optional title (tooltip) */
   title?: string;
-  /** Extra props for outer wrapper */
-  class?: string;
-  style?: JSX.CSSProperties;
 };
 
 const clamp = (n: number, min: number, max: number) =>
@@ -51,8 +50,7 @@ const ProgressCircle: Component<Props> = (allProps) => {
     "labelFormatter",
     "indeterminate",
     "title",
-    "class",
-    "style",
+    "stylex",
   ]);
 
   const size = () => props.size ?? 16;
@@ -67,33 +65,37 @@ const ProgressCircle: Component<Props> = (allProps) => {
     value() == null ? 0 : c() * (1 - value()! / 100)
   );
 
-const ariaProps = (): JSX.AriaAttributes & { role: "progressbar" } =>
-  props.indeterminate
-    ? {
-        role: "progressbar",
-        "aria-valuemin": 0,
-        "aria-valuemax": 100,
-        "aria-busy": true as const, // or just true
-      }
-    : {
-        role: "progressbar",
-        "aria-valuemin": 0,
-        "aria-valuemax": 100,
-        "aria-valuenow": value()!, // non-null since not indeterminate
-      };
+  const ariaProps = (): JSX.AriaAttributes & { role: "progressbar" } =>
+    props.indeterminate
+      ? {
+          role: "progressbar",
+          "aria-valuemin": 0,
+          "aria-valuemax": 100,
+          "aria-busy": true as const, // or just true
+        }
+      : {
+          role: "progressbar",
+          "aria-valuemin": 0,
+          "aria-valuemax": 100,
+          "aria-valuenow": value()!, // non-null since not indeterminate
+        };
 
   // Unique gradient id if you later want to add gradients; left simple for now
   const cap = () => (props.rounded ? "round" : "butt");
 
   return (
     <div
-      class={props.class}
-      style={{
-        position: "relative",
-        display: "inline-block",
-        width: `${size()}px`,
-        height: `${size()}px`,
-        ...props.style,
+      ref={(el) => {
+        stylex(() => [
+          el,
+          {
+            position: "relative",
+            display: "inline-block",
+            width: `${size()}px` as string,
+            height: `${size()}px` as string,
+            ...props.stylex,
+          },
+        ]);
       }}
       title={props.title}
       {...ariaProps()}

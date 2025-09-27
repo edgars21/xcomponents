@@ -1,46 +1,23 @@
-// import { Popover } from "@kobalte/core/popover";
-// import "./style.css";
-// // import Icon from "@xcomponents/icon";
+// import Icon from "@xcomponents/icon";
 import Button from "@xcomponents/button";
-// // import Test from "./Test";
-import { createSignal, untrack, type Accessor } from "solid-js";
-
-// export default function App() {
-//   const [loading, setLoading] = createSignal(false);
-//   return (
-//     <div style="">
-//       <div style="display: flex; flex-gap: 10px">
-//         <Button
-//           setLoading={loading()}
-//           startIcon="Activity"
-//           caret
-//           labelSlot={<>Click me</>}
-//           size="large"
-//           onClick={() => setLoading(!loading())}
-//         >
-//           <div>Here we go</div>
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// }
+// import Test from "./Test";
+import { createSignal } from "solid-js";
 
 export default function App() {
-  const [loading, setLoading] = createSignal(0);
+  const [loading, setLoading] = createSignal(false);
   return (
     <div style="">
-      <div>Outter</div>
-      <button onClick={() => setLoading(loading() + 1)}>Count</button>
-      <Inner test={loading} />
-    </div>
-  );
-}
-
-function Inner(p: { test: Accessor<number> }) {
-  const props = untrack(() => ({ ...p }));
-  return (
-    <div style="">
-      Inner here {props.test()}
+      <div style="display: flex; flex-gap: 10px">
+        <Button
+          rootStylex={{ width: "unset", height: "unset" }}
+          size="large"
+          icon="Activity"
+          caret
+          labelSlot="View"
+          setLoading={loading}
+          onClick={(e) => loading() ? setLoading(false) : setLoading(true)}
+        >something else</Button>
+      </div>
     </div>
   );
 }

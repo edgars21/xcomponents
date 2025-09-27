@@ -1,5 +1,5 @@
 {
-  "name": "@xcomponents/button",
+  "name": "@xcomponents/shared",
   "version": "0.1.0",
   "license": "MIT",
   "author": "Edgars Snepsts",
@@ -10,16 +10,9 @@
     "dist/**/*",
     "cdn/**/*"
   ],
-  "dependencies": {
-    "@stylex/solid": "file:../../../13.8_stylex/packages/solid/",
-    "@xcomponents/progress-circle": "^0.1.0",
-    "@xcomponents/icon": "^0.1.0",
-    "@xcomponents/shared": "^0.1.0"
-  },
   "devDependencies": {
     "esbuild-plugin-solid": "^0.6.0",
     "rimraf": "^6.0.1",
-    "tsup": "^8.5.0",
     "typescript": "^5.4.5"
   },
   "scripts": {

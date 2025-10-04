@@ -16,6 +16,7 @@ import { type ToAccessorsCfg } from "@xcomponents/shared";
 export type InputRefComponent = {
   ref?: (el: HTMLElement) => void;
 };
+false && stylex;
 
 type Props = Constructor &
   Omit<Slots, "defaultSlot"> & { children?: Slots["defaultSlot"] } & Events &

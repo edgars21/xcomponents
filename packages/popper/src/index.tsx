@@ -23,6 +23,7 @@ import {
   createEventListenerWithCleanupFactory,
   type ToAccessorsCfg,
 } from "@xcomponents/shared";
+false && stylex;
 
 export type Props = Constructor & {
   children: Slots["defaultSlot"];

@@ -1,6 +1,7 @@
 // ProgressCircle.tsx
 import { Component, JSX, createMemo, splitProps, Show } from "solid-js";
 import { stylex, type StyleXValidSolidType } from "@stylex/solid";
+false && stylex;
 
 type Props = {
   stylex?: StyleXValidSolidType;

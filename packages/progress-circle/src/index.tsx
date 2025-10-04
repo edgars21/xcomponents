@@ -85,17 +85,12 @@ const ProgressCircle: Component<Props> = (allProps) => {
 
   return (
     <div
-      ref={(el) => {
-        stylex(() => [
-          el,
-          {
-            position: "relative",
-            display: "inline-block",
-            width: `${size()}px` as string,
-            height: `${size()}px` as string,
-            ...props.stylex,
-          },
-        ]);
+      use:stylex={{
+        position: "relative",
+        display: "inline-block",
+        width: `${size()}px` as string,
+        height: `${size()}px` as string,
+        ...props.stylex,
       }}
       title={props.title}
       {...ariaProps()}

@@ -238,26 +238,20 @@ export default function Button(p: Props) {
           ...(rIsLoadingState() && { "data-loading": "" }),
         }}
         onClick={events.onClick}
-        ref={(el: HTMLElement) => {
-          rootElRef = el;
-          stylex(() => [
-            el,
-            {
-              ...{
-                position: "relative",
-                display: "grid",
-                "place-items": "center",
-                "place-content": "center",
-                "grid-auto-flow":
-                  buttonType !== ButtonType.Normal ? "row" : "column",
-                gap: "8px",
-                color: "currentColor",
-              },
-              ...typeStyles[buttonType][constructor.size],
-              ...typeStyles[buttonType].styles,
-              ...constructor.rootStylex,
-            },
-          ]);
+        use:stylex={{
+          ...{
+            position: "relative",
+            display: "grid",
+            "place-items": "center",
+            "place-content": "center",
+            "grid-auto-flow":
+              buttonType !== ButtonType.Normal ? "row" : "column",
+            gap: "8px",
+            color: "currentColor",
+          },
+          ...typeStyles[buttonType][constructor.size],
+          ...typeStyles[buttonType].styles,
+          ...constructor.rootStylex,
         }}
       >
         {buttonType === ButtonType.Normal ? (
@@ -265,16 +259,11 @@ export default function Button(p: Props) {
             rIsLoadingState() && !props.loadingTrailing && (
             <ProgressCircle indeterminate />)
             <div
-              ref={(el) => {
-                stylex(() => [
-                  el,
-                  {
-                    display: [
-                      "",
-                      [rIsLoadingState() && !props.loadingTrailing, "none"],
-                    ],
-                  },
-                ]);
+              use:stylex={{
+                display: [
+                  "",
+                  [rIsLoadingState() && !props.loadingTrailing, "none"],
+                ],
               }}
             >
               {startAdornmentJsx}
@@ -282,16 +271,11 @@ export default function Button(p: Props) {
             <span>{slots.labelSlot}</span>
             props.caret && !props.caretLeading && <Icon name="ChevronDown" />
             <div
-              ref={(el) => {
-                stylex(() => [
-                  el,
-                  {
-                    display: [
-                      "",
-                      [rIsLoadingState() && !!props.loadingTrailing, "none"],
-                    ],
-                  },
-                ]);
+              use:stylex={{
+                display: [
+                  "",
+                  [rIsLoadingState() && !!props.loadingTrailing, "none"],
+                ],
               }}
             >
               {endAdornmentJsx}
@@ -302,16 +286,11 @@ export default function Button(p: Props) {
         ) : (
           <>
             <div
-              ref={(el: HTMLElement) => {
-                stylex(() => [
-                  el,
-                  {
-                    display: "grid",
-                    "place-items": "center",
-                    "grid-auto-flow": "row",
-                    opacity: ["", [rIsLoadingState(), "0.3"]],
-                  },
-                ]);
+              use:stylex={{
+                display: "grid",
+                placeItems: "center",
+                gridAutoFlow: "row",
+                opacity: ["", [rIsLoadingState(), "0.3"]],
               }}
             >
               {(() => {

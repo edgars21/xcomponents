@@ -58,19 +58,17 @@ export default function Tooltip(p: Props) {
     return null;
   }
 
-  console.log("anchor is : ", constructor.anchor || validAnchorElementFromDefaultSlot)
-
   return (
     <>
       {!constructor.anchor ? validAnchorElementFromDefaultSlot : null}
       <Popper
         stylex={{
           padding: "5px",
-          "font-size": "14px",
+          fontSize: "14px",
           "color": "#fff",
           border: "none",
-          "box-shadow": "unset",
-          "background-color": "#fff",
+          boxShadow: "unset",
+          backgroundColor: "#fff",
         }}
         anchor={(constructor.anchor || validAnchorElementFromDefaultSlot)!}
         placement={constructor.placement}

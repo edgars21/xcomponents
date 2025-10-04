@@ -71,8 +71,8 @@ export default function Popper(p: Props) {
     isOpen: false,
   };
 
-  let rootEl: HTMLElement | undefined;
-  let arrowEl: HTMLElement | undefined;
+  let rootEl: HTMLDivElement | undefined;
+  let arrowEl: HTMLDivElement | undefined;
 
   const [rIsOpenState, setrIsOpenState] = createSignal(false);
 
@@ -237,51 +237,37 @@ export default function Popper(p: Props) {
 
         return (
           <div
-            ref={(el: HTMLElement) => {
-              rootEl = el;
-              stylex(() => [
-                el,
-                {
-                  ...{
-                    ...rootStyles,
-                    position: "fixed",
-                    "z-index": "9999",
-                    top: rComputedPosition()
-                      ? `${rComputedPosition()!.y}px`
-                      : "0",
-                    left: rComputedPosition()
-                      ? `${rComputedPosition()!.x}px`
-                      : "0",
-                  },
-                },
-              ]);
+            ref={rootEl}
+            use:stylex={{
+              ...{
+                ...rootStyles,
+                position: "fixed",
+                "z-index": "9999",
+                top: rComputedPosition() ? `${rComputedPosition()!.y}px` : "0",
+                left: rComputedPosition() ? `${rComputedPosition()!.x}px` : "0",
+              },
             }}
           >
             <div
-              ref={(el: HTMLElement) => {
-                arrowEl = el;
-                stylex(() => [
-                  el,
-                  {
-                    ...{
-                      ...arrowStyles,
-                      "box-sizing": "border-box",
-                      width: "6px",
-                      height: "6px",
-                      position: "absolute",
-                      top: rComputedPosition()
-                        ? `${rComputedPosition()!.middlewareData?.arrow?.y}px`
-                        : "0",
-                      left: rComputedPosition()
-                        ? `${rComputedPosition()!.middlewareData?.arrow?.x}px`
-                        : "0",
-                      transform: "rotate(45deg)",
-                      ...(rComputedPosition()
-                        ? { [rComputedPosition()!.staticSide]: "-3px" }
-                        : {}),
-                    },
-                  },
-                ]);
+              ref={arrowEl}
+              use:stylex={{
+                ...{
+                  ...arrowStyles,
+                  "box-sizing": "border-box",
+                  width: "6px",
+                  height: "6px",
+                  position: "absolute",
+                  top: rComputedPosition()
+                    ? `${rComputedPosition()!.middlewareData?.arrow?.y}px`
+                    : "0",
+                  left: rComputedPosition()
+                    ? `${rComputedPosition()!.middlewareData?.arrow?.x}px`
+                    : "0",
+                  transform: "rotate(45deg)",
+                  ...(rComputedPosition()
+                    ? { [rComputedPosition()!.staticSide]: "-3px" }
+                    : {}),
+                },
               }}
             ></div>
             <span>{slots.defaultSlot}</span>

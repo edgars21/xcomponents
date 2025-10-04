@@ -1,46 +1,28 @@
-import {
-  type JSX,
-  untrack,
-  children,
-  createSignal,
-  createEffect,
-  Show,
-} from "solid-js";
-import * as icons from "lucide-solid";
-import { type ToAccessorsCfg } from "@xcomponents/shared";
-import {
-  computePosition,
-  offset,
-  flip,
-  shift,
-  arrow,
-  size,
-  type Placement as FloatingUIPlacement,
-  type MiddlewareData,
-} from "@floating-ui/dom";
-import { stylex, type StyleXValidSolidType } from "@stylex/solid";
-import Popper, {type Constructor as PopperConstructor} from "@xcomponents/popper";
+import { type JSX, untrack, children } from "solid-js";
+import Popper, {
+  type Constructor as PopperConstructor,
+  type ApiBindings as PopperApiBindings,
+} from "@xcomponents/popper";
 
-export type Props = Constructor & {
-  children: Slots["defaultSlot"];
-} & ApiBindings;
+export type Props = {
+  children?: Slots["defaultSlot"];
+} & Omit<Slots, "defaultSlot"> &
+  Constructor &
+  ApiBindings;
 
-interface Constructor {
+export interface Constructor {
   anchor?: HTMLElement;
   placement?: PopperConstructor["placement"];
+  trigger?: PopperConstructor["trigger"];
   arrow?: boolean;
 }
 
-type Slots = {
+export type Slots = {
   defaultSlot?: JSX.Element;
-  tooltipSlot?: JSX.Element | string;
+  tooltipSlot: JSX.Element | string;
 };
 
-type ApiBindings = ToAccessorsCfg<Api, true, true>;
-
-interface Api {
-  setOpen: (open: boolean) => void;
-}
+export type ApiBindings = PopperApiBindings;
 
 export default function Tooltip(p: Props) {
   const props = untrack(() => p);
@@ -49,6 +31,7 @@ export default function Tooltip(p: Props) {
     ...({
       placement: "bottom",
       arrow: true,
+      trigger: "hover",
     } as const),
     ...(props as Constructor),
   };
@@ -59,80 +42,44 @@ export default function Tooltip(p: Props) {
     defaultSlot: children(() => props.children)(),
   } as Slots;
 
-  const anchorElement = (() => {
-    let validAnchorElementFromSlot: HTMLElement | undefined;
+  const validAnchorElementFromDefaultSlot = (() => {
     if (slots.defaultSlot) {
-      const potentialElement = Array.isArray(slots.defaultSlot) ? slots.defaultSlot[0] : slots.defaultSlot;
+      const potentialElement = Array.isArray(slots.defaultSlot)
+        ? slots.defaultSlot[0]
+        : slots.defaultSlot;
       if (potentialElement instanceof HTMLElement) {
-        validAnchorElementFromSlot = potentialElement;
+        return potentialElement;
       }
     }
+  })();
 
-    return validAnchorElementFromSlot || constructor.anchor;
-  })()
-
-  if (!anchorElement) {
+  if (!validAnchorElementFromDefaultSlot && !constructor.anchor) {
     console.error("Popper: No anchor element provided");
     return null;
   }
 
-  const state = {
-    isOpen: false,
-  };
-
-
-  let rootEl: HTMLElement | undefined;
-  let arrowEl: HTMLElement | undefined;
-
-  const [rIsOpenState, setrIsOpenState] = createSignal(false);
-
-  const [rAvailableHeight, setrAvailableHeight] = createSignal<number | null>(
-    null
-  );
-
-  const [rComputedPosition, setrComputedPosition] = createSignal<{
-    x: number;
-    y: number;
-    placement: FloatingUIPlacement;
-    middlewareData: MiddlewareData;
-    staticSide: string;
-  } | null>(null);
-
-  const api: Api = {
-    setOpen: (open: boolean) => {
-      if (open === state.isOpen) return;
-
-      console.log("calling set open", open, state.isOpen);
-      state.isOpen = open;
-      setrIsOpenState(open);
-      queueMicrotask(() => {
-        const el = document.getElementById("foo");
-        computePopperPosition();
-      });
-    },
-  };
-
-  if (apiBindings.setOpen) {
-    createEffect(() => {
-      api.setOpen(
-        typeof apiBindings.setOpen === "function"
-          ? apiBindings.setOpen()
-          : apiBindings.setOpen || false
-      );
-    });
-  }
-
+  console.log("anchor is : ", constructor.anchor || validAnchorElementFromDefaultSlot)
 
   return (
-    <Show when={rIsOpenState()}>
+    <>
+      {!constructor.anchor ? validAnchorElementFromDefaultSlot : null}
       <Popper
-        anchor={anchorElement}
+        stylex={{
+          padding: "5px",
+          "font-size": "14px",
+          "color": "#fff",
+          border: "none",
+          "box-shadow": "unset",
+          "background-color": "#fff",
+        }}
+        anchor={(constructor.anchor || validAnchorElementFromDefaultSlot)!}
         placement={constructor.placement}
         arrow={constructor.arrow}
         trigger={constructor.trigger}
+        setOpen={apiBindings.setOpen}
       >
-        {slots.tooltipSlot || slots.defaultSlot}
+        {slots.tooltipSlot}
       </Popper>
-    </Show>
+    </>
   );
 }

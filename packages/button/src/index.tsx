@@ -1,27 +1,25 @@
 import {
   createSignal,
-  mergeProps,
   createEffect,
   JSX,
-  type Component,
   children,
-  type Accessor,
   untrack,
-  onMount
+  onMount,
+  Show,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { stylex, type StyleXValidSolidType } from "@stylex/solid";
 import ProgressCircle from "@xcomponents/progress-circle";
 import Icon, { type Props as IconProps } from "@xcomponents/icon";
+import Tooltip from "@xcomponents/tooltip";
 import { type ToAccessorsCfg } from "@xcomponents/shared";
 export type InputRefComponent = {
   ref?: (el: HTMLElement) => void;
 };
 
-
 type Props = Constructor &
   Omit<Slots, "defaultSlot"> & { children?: Slots["defaultSlot"] } & Events &
-  ApiBindings; 
+  ApiBindings;
 
 type Constructor = {
   rootStylex?: StyleXValidSolidType;
@@ -34,13 +32,14 @@ type Constructor = {
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"];
   href?: string;
-} & InputRefComponent
+} & InputRefComponent;
 
 interface Slots {
   defaultSlot?: JSX.Element;
   labelSlot?: JSX.Element | string;
   startSlot?: JSX.Element;
   endSlot?: JSX.Element;
+  tooltipSlot?: JSX.Element | string;
 }
 
 type ApiBindings = ToAccessorsCfg<Api, true, true>;
@@ -191,13 +190,18 @@ export default function Button(p: Props) {
     }
   }
 
-  let rootElRef : HTMLElement | undefined;
+  let rootElRef: HTMLElement | undefined;
+
+  const [rMounted, setrMounted] = createSignal(false);
+
+  const haveTooltip = !!slots.tooltipSlot;
 
   onMount(() => {
     if (constructor.ref) {
+      setrMounted(true);
       constructor.ref(rootElRef!);
     }
-  })
+  });
 
   const caretJsx = constructor.caret ? <Icon name="ChevronDown" /> : null;
 
@@ -224,113 +228,120 @@ export default function Button(p: Props) {
   })();
 
   return (
-    <Dynamic
-      data-button-type={buttonType}
-      component={elementTagType}
-      {...{
-        ...(constructor.href && { href: constructor.href }),
-        ...(rIsDisabledState() && { disabled: state.isDisabled }),
-        ...(rIsLoadingState() && { "data-loading": "" }),
-      }}
-      onClick={events.onClick}
-      ref={(el: HTMLElement) => {
-        rootElRef = el;
-        stylex(() => [
-          el,
-          {
-            ...{
-              position: "relative",
-              display: "grid",
-              "place-items": "center",
-              "place-content": "center",
-              "grid-auto-flow":
-                buttonType !== ButtonType.Normal ? "row" : "column",
-              gap: "8px",
-              color: "currentColor",
+    <>
+      <Dynamic
+        data-button-type={buttonType}
+        component={elementTagType}
+        {...{
+          ...(constructor.href && { href: constructor.href }),
+          ...(rIsDisabledState() && { disabled: state.isDisabled }),
+          ...(rIsLoadingState() && { "data-loading": "" }),
+        }}
+        onClick={events.onClick}
+        ref={(el: HTMLElement) => {
+          rootElRef = el;
+          stylex(() => [
+            el,
+            {
+              ...{
+                position: "relative",
+                display: "grid",
+                "place-items": "center",
+                "place-content": "center",
+                "grid-auto-flow":
+                  buttonType !== ButtonType.Normal ? "row" : "column",
+                gap: "8px",
+                color: "currentColor",
+              },
+              ...typeStyles[buttonType][constructor.size],
+              ...typeStyles[buttonType].styles,
+              ...constructor.rootStylex,
             },
-            ...typeStyles[buttonType][constructor.size],
-            ...typeStyles[buttonType].styles,
-            ...constructor.rootStylex,
-          },
-        ]);
-      }}
-    >
-      {buttonType === ButtonType.Normal ? (
-        <>
-          rIsLoadingState() && !props.loadingTrailing && (
-          <ProgressCircle indeterminate />)
-          <div
-            ref={(el) => {
-              stylex(() => [
-                el,
-                {
-                  display: [
-                    "",
-                    [rIsLoadingState() && !props.loadingTrailing, "none"],
-                  ],
-                },
-              ]);
-            }}
-          >
-            {startAdornmentJsx}
-          </div>
-          <span>{slots.labelSlot}</span>
-          props.caret && !props.caretLeading && <Icon name="ChevronDown" />
-          <div
-            ref={(el) => {
-              stylex(() => [
-                el,
-                {
-                  display: [
-                    "",
-                    [rIsLoadingState() && !!props.loadingTrailing, "none"],
-                  ],
-                },
-              ]);
-            }}
-          >
-            {endAdornmentJsx}
-          </div>
-          rIsLoadingState() && props.loadingTrailing && (
-          <ProgressCircle indeterminate />)
-        </>
-      ) : (
-        <>
-          <div
-            ref={(el: HTMLElement) => {
-              stylex(() => [
-                el,
-                {
-                  display: "grid",
-                  "place-items": "center",
-                  "grid-auto-flow": "row",
-                  opacity: ["", [rIsLoadingState(), "0.3"]],
-                },
-              ]);
-            }}
-          >
-            {(() => {
-              if (constructor.icon === true) {
-                return slots.labelSlot;
-              } else {
-                return <Icon name={constructor.icon!} />;
-              }
-            })()}
-            <span>{slots.labelSlot}</span>
-          </div>
-          {rIsLoadingState() && (
-            <ProgressCircle
-              stylex={{
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                transform: "translate(-50%, -50%)",
+          ]);
+        }}
+      >
+        {buttonType === ButtonType.Normal ? (
+          <>
+            rIsLoadingState() && !props.loadingTrailing && (
+            <ProgressCircle indeterminate />)
+            <div
+              ref={(el) => {
+                stylex(() => [
+                  el,
+                  {
+                    display: [
+                      "",
+                      [rIsLoadingState() && !props.loadingTrailing, "none"],
+                    ],
+                  },
+                ]);
               }}
-              indeterminate
-            />
-          )}
-        </>
+            >
+              {startAdornmentJsx}
+            </div>
+            <span>{slots.labelSlot}</span>
+            props.caret && !props.caretLeading && <Icon name="ChevronDown" />
+            <div
+              ref={(el) => {
+                stylex(() => [
+                  el,
+                  {
+                    display: [
+                      "",
+                      [rIsLoadingState() && !!props.loadingTrailing, "none"],
+                    ],
+                  },
+                ]);
+              }}
+            >
+              {endAdornmentJsx}
+            </div>
+            rIsLoadingState() && props.loadingTrailing && (
+            <ProgressCircle indeterminate />)
+          </>
+        ) : (
+          <>
+            <div
+              ref={(el: HTMLElement) => {
+                stylex(() => [
+                  el,
+                  {
+                    display: "grid",
+                    "place-items": "center",
+                    "grid-auto-flow": "row",
+                    opacity: ["", [rIsLoadingState(), "0.3"]],
+                  },
+                ]);
+              }}
+            >
+              {(() => {
+                if (constructor.icon === true) {
+                  return slots.labelSlot;
+                } else {
+                  return <Icon name={constructor.icon!} />;
+                }
+              })()}
+              <span>{slots.labelSlot}</span>
+            </div>
+            {rIsLoadingState() && (
+              <ProgressCircle
+                stylex={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+                indeterminate
+              />
+            )}
+          </>
+        )}
+      </Dynamic>
+      {haveTooltip && (
+        <Show when={rMounted()}>
+          <Tooltip anchor={rootElRef!} tooltipSlot={slots.tooltipSlot} />
+        </Show>
       )}
-    </Dynamic>
+    </>
   );
 }

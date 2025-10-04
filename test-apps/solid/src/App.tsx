@@ -1,8 +1,10 @@
 // import Icon from "@xcomponents/icon";
 import Button from "@xcomponents/button";
 import Popper from "@xcomponents/popper";
+import Tooltip from "@xcomponents/tooltip";
 // import Test from "./Test";
 import { createSignal, Show } from "solid-js";
+import ProgressCircle from "@xcomponents/progress-circle";
 
 export default function App() {
   const [open, setOpen] = createSignal(false);
@@ -22,6 +24,14 @@ export default function App() {
     >
       <div style="display: flex; flex-gap: 10px">
         <Button
+          tooltipSlot={
+            <h1>
+              some shit inside{" "}
+              <div>
+                <ProgressCircle indeterminate />
+              </div>
+            </h1>
+          }
           ref={setButtonEl}
           rootStylex={{ width: "unset", height: "unset" }}
           size="large"
@@ -31,11 +41,10 @@ export default function App() {
         >
           Click Me
         </Button>
-        <Show when={buttonEl()}>
-          <Popper anchor={buttonEl()!} setOpen={open} placement="bottom" arrow trigger="click">
-            Stuff inside
-          </Popper>
-        </Show>
+        <Button
+        
+          icon="Activity"
+        >Here</Button>
       </div>
     </div>
   );

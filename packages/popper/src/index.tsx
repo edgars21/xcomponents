@@ -29,6 +29,7 @@ export type Props = Constructor & {
 } & ApiBindings;
 
 export interface Constructor {
+  stylex?: StyleXValidSolidType;
   anchor: HTMLElement;
   placement?: FloatingUIPlacement;
   arrow?: boolean;
@@ -39,9 +40,9 @@ type Slots = {
   defaultSlot: JSX.Element;
 };
 
-type ApiBindings = ToAccessorsCfg<Api, true, true>;
+export type ApiBindings = ToAccessorsCfg<Api, true, true>;
 
-interface Api {
+export interface Api {
   setOpen: (open: boolean) => void;
 }
 
@@ -198,62 +199,95 @@ export default function Popper(p: Props) {
 
   return (
     <Show when={rIsOpenState()}>
-      <div
-        ref={(el: HTMLElement) => {
-          rootEl = el;
-          stylex(() => [
-            el,
-            {
-              ...{
-                position: "fixed",
-                border: "1px solid gray",
-                "border-radius": "4px",
-                "box-shadow": "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                "background-color": "#fff",
-                "z-index": "9999",
-                top: rComputedPosition() ? `${rComputedPosition()!.y}px` : "0",
-                left: rComputedPosition() ? `${rComputedPosition()!.x}px` : "0",
-              },
-            },
-          ]);
-        }}
-      >
-        <div
-          ref={(el: HTMLElement) => {
-            arrowEl = el;
-            stylex(() => [
-              el,
-              {
-                ...{
-                  position: "absolute",
-                  border: "1px solid",
-                  borderColor: rComputedPosition()
-                    ? diamondBorderColor(
-                        rComputedPosition()!.staticSide as Side,
-                        "#9ca3af"
-                      )
-                    : "transparent",
-                  "background-color": "#fff",
-                  "box-sizing": "border-box",
-                  width: "6px",
-                  height: "6px",
-                  top: rComputedPosition()
-                    ? `${rComputedPosition()!.middlewareData?.arrow?.y}px`
-                    : "0",
-                  left: rComputedPosition()
-                    ? `${rComputedPosition()!.middlewareData?.arrow?.x}px`
-                    : "0",
-                  transform: "rotate(45deg)",
-                  ...(rComputedPosition()
-                    ? { [rComputedPosition()!.staticSide]: "-3px" }
-                    : {}),
+      {(() => {
+        const rootStyles = {
+          border: "1px solid gray",
+          "border-radius": "4px",
+          "box-shadow": "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+          "background-color": "#fff",
+          ...constructor.stylex,
+        } as StyleXValidSolidType;
+
+        let [borderSize, borderTyp, borderColor] =
+          typeof rootStyles.border === "string"
+            ? rootStyles.border.split(" ")
+            : [];
+
+        // @ts-ignore
+        if (rootStyles.borderColor) {
+          // @ts-ignore
+          borderColor = rootStyles.borderColor;
+        }
+
+        const haveBorder = !!borderSize && !!borderTyp && !!borderColor;
+
+        const arrowStyles = {
+          // @ts-ignore
+          "background-color": rootStyles["background-color"],
+          ...(haveBorder && {
+            border: `${borderSize} ${borderTyp}`,
+            borderColor: rComputedPosition()
+              ? diamondBorderColor(
+                  rComputedPosition()!.staticSide as Side,
+                  borderColor
+                )
+              : "transparent",
+          }),
+        };
+
+        return (
+          <div
+            ref={(el: HTMLElement) => {
+              rootEl = el;
+              stylex(() => [
+                el,
+                {
+                  ...{
+                    ...rootStyles,
+                    position: "fixed",
+                    "z-index": "9999",
+                    top: rComputedPosition()
+                      ? `${rComputedPosition()!.y}px`
+                      : "0",
+                    left: rComputedPosition()
+                      ? `${rComputedPosition()!.x}px`
+                      : "0",
+                  },
                 },
-              },
-            ]);
-          }}
-        ></div>
-        <span>{slots.defaultSlot}</span>
-      </div>
+              ]);
+            }}
+          >
+            <div
+              ref={(el: HTMLElement) => {
+                arrowEl = el;
+                stylex(() => [
+                  el,
+                  {
+                    ...{
+                      ...arrowStyles,
+                      "box-sizing": "border-box",
+                      width: "6px",
+                      height: "6px",
+                      position: "absolute",
+                      top: rComputedPosition()
+                        ? `${rComputedPosition()!.middlewareData?.arrow?.y}px`
+                        : "0",
+                      left: rComputedPosition()
+                        ? `${rComputedPosition()!.middlewareData?.arrow?.x}px`
+                        : "0",
+                      transform: "rotate(45deg)",
+                      ...(rComputedPosition()
+                        ? { [rComputedPosition()!.staticSide]: "-3px" }
+                        : {}),
+                    },
+                  },
+                ]);
+              }}
+            ></div>
+            <span>{slots.defaultSlot}</span>
+          </div>
+        );
+      })()}
     </Show>
   );
 }

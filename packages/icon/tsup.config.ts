@@ -8,24 +8,16 @@ import type { Plugin } from "esbuild";
 const rawPlugin: Plugin = {
   name: "raw-loader",
   setup(build) {
-    // 1) Catch any import ending with ?raw and resolve it to an absolute path
-    //    while tagging it with a custom namespace.
     build.onResolve({ filter: /\?raw$/ }, (args) => {
       const realPath = path.resolve(
         args.resolveDir,
         args.path.replace(/\?raw$/, "")
       );
-      // Helpful to see it's actually matching:
-      console.log(`[raw-loader] onResolve -> ${args.path} -> ${realPath}`);
       return { path: realPath, namespace: "raw-file" };
     });
 
-    // 2) Load the file content as text for our custom namespace.
     build.onLoad({ filter: /.*/, namespace: "raw-file" }, async (args) => {
       const content = await fs.readFile(args.path, "utf8");
-      console.log(
-        `[raw-loader] onLoad -> ${args.path} (${content.length} bytes)`
-      );
       return {
         contents: `export default ${JSON.stringify(content)};`,
         loader: "js",
@@ -35,7 +27,7 @@ const rawPlugin: Plugin = {
 };
 
 export default defineConfig({
-  entry: ["src/index.tsx"],
+  entry: ["src/index.tsx", "src/libraries/lucide/index.tsx"],
   format: ["esm", "cjs"],
   dts: true,
   sourcemap: true,

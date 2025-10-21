@@ -83,7 +83,6 @@ export default function Icon(p: Props) {
   ];
   let icon: string;
   if (!iconKey) {
-    console.log("using default library: ", defautltLibraryName, libraryKeyOrIconKey);
     icon = (libraries as Record<string, Record<string, string>>)[
       defautltLibraryName
     ]?.[libraryKeyOrIconKey];
@@ -97,17 +96,14 @@ export default function Icon(p: Props) {
     console.error(`Icon "${props.name}" not found in library"`);
     icon = libraries["default"]["question-mark"];
   }
-
-  const match = icon.match(
-    /<svg\b[^>]*\bviewBox\s*=\s*(['"])([^'"]+)\1[^>]*>([\s\S]*?)<\/svg>/i
-  );
-  if (match) {
-    const viewBox = match[2] || null;
-    const innerSvg = match[3];
+ 
+  const result = parseSvg(icon);  
+  if (result) {
+    const { attributes, innerSvg } = result;
     return (
       <Dynamic
         component="svg"
-        {...(viewBox && { viewBox: viewBox })}
+        {...(attributes && attributes)}
         width={constructor.size}
         height={constructor.size}
         color={constructor.color}
@@ -117,4 +113,28 @@ export default function Icon(p: Props) {
   } else {
     return <Dynamic component="span" innerHTML={icon} />;
   }
+}
+
+function parseSvg(
+  icon: string
+): { attributes: Record<string, string | boolean>; innerSvg: string } | null {
+  const match = icon.match(/<svg\b([^>]*)>([\s\S]*?)<\/svg>/i);
+  if (!match) return null;
+
+  const attrsChunk = match[1];
+  const innerSvg = match[2];
+
+  const attrRegex =
+    /([a-zA-Z_:][\w:.\-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+
+  const attributes: Record<string, string | boolean> = {};
+  let attrMatch: RegExpExecArray | null;
+
+  while ((attrMatch = attrRegex.exec(attrsChunk)) !== null) {
+    const name = attrMatch[1];
+    const value = attrMatch[2] ?? attrMatch[3] ?? attrMatch[4] ?? true;
+    attributes[name] = value;
+  }
+
+  return { attributes, innerSvg };
 }

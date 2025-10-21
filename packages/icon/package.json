@@ -6,11 +6,16 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./lucide-library": "./dist/libraries/lucide/index.js"
+  },
   "files": [
     "dist/**/*",
     "cdn/**/*"
   ],
   "devDependencies": {
+    "@types/lodash": "^4.17.20",
     "@types/node": "^24.8.1",
     "esbuild-plugin-solid": "^0.6.0",
     "rimraf": "^6.0.1",
@@ -24,6 +29,8 @@
     "solid-js": "^1.9.9"
   },
   "dependencies": {
-    "lucide-solid": "^0.544.0"
+    "lodash": "^4.17.21",
+    "lucide-solid": "^0.544.0",
+    "lucide-static": "^0.546.0"
   }
 }

@@ -73,10 +73,6 @@ export default function Icon(p: Props) {
     ...(props as Constructor),
   };
 
-
-  console.log("libraries", libraries);
-  console.log("defautltLibraryName", props.name);
-
   const [libraryKeyOrIconKey, iconKey] = props.name.split(":") as [
     string,
     string | undefined

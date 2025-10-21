@@ -6,6 +6,7 @@ import {
   createEffect,
   Show,
   onCleanup,
+  onMount,
 } from "solid-js";
 import * as icons from "lucide-solid";
 import {
@@ -15,8 +16,10 @@ import {
   shift,
   arrow,
   size,
+  autoUpdate,
   type Placement as FloatingUIPlacement,
   type MiddlewareData,
+  type OffsetOptions,
 } from "@floating-ui/dom";
 import { stylex, type StyleXValidSolidType } from "@stylex/solid";
 import {
@@ -35,6 +38,12 @@ export interface Constructor {
   placement?: FloatingUIPlacement;
   arrow?: boolean;
   trigger?: "hover" | "click" | "focus" | "manual";
+  autoUpdate?: boolean;
+  middlewares?:
+    | {
+        offset?: OffsetOptions | false;
+      }
+    | false;
 }
 
 type Slots = {
@@ -55,6 +64,7 @@ export default function Popper(p: Props) {
       placement: "bottom",
       arrow: false,
       trigger: "manual",
+      autoUpdate: false,
     } as const),
     ...(props as Constructor),
   };
@@ -92,11 +102,21 @@ export default function Popper(p: Props) {
   const api: Api = {
     setOpen: (open: boolean) => {
       if (open === state.isOpen) return;
-      console.log("lettting trough");
       state.isOpen = open;
       setrIsOpenState(open);
       queueMicrotask(() => {
-        computePopperPosition();
+        if (constructor.autoUpdate) {
+          const cleanup = autoUpdate(
+            constructor.anchor,
+            rootEl!,
+            computePopperPosition
+          );
+          onCleanup(() => {
+            cleanup();
+          });
+        } else {
+          computePopperPosition();
+        }
       });
     },
   };
@@ -116,8 +136,6 @@ export default function Popper(p: Props) {
       case "click":
         addEventListenerWithCleanup(constructor.anchor, "click", () => {
           function onOutsideClick(e: MouseEvent) {
-            console.log("outside click", e.target);
-
             if (!rootEl!.contains(e.target as Node)) {
               api.setOpen(false);
               window.removeEventListener("click", onOutsideClick);
@@ -130,7 +148,6 @@ export default function Popper(p: Props) {
             setTimeout(() => {
               window.addEventListener("click", onOutsideClick);
             }, 0);
-            console.log("need to open: ", !state.isOpen);
             api.setOpen(true);
           }
         });
@@ -157,15 +174,21 @@ export default function Popper(p: Props) {
         strategy: "fixed",
         placement: constructor.placement,
         middleware: [
-          offset(6),
-          // flip(),
-          shift({ crossAxis: true, padding: 3 }),
+          ...(constructor?.middlewares === false
+            ? []
+            : [
+                ...(constructor?.middlewares?.offset === false
+                  ? []
+                  : [offset(constructor?.middlewares?.offset ?? 6)]),
+                // flip(),
+                shift({ crossAxis: true, padding: 3 }),
+              ]),
           ...(constructor.arrow ? [arrow({ element: arrowEl! })] : []),
-          size({
-            apply({ availableHeight }) {
-              setrAvailableHeight(availableHeight - 6);
-            },
-          }),
+          // size({
+          //   apply({ availableHeight }) {
+          //     setrAvailableHeight(availableHeight - 6);
+          //   },
+          // }),
         ],
       }
     );
@@ -195,8 +218,6 @@ export default function Popper(p: Props) {
       left: "right",
     }[placement.split("-")[0]!];
   }
-
-  onCleanup(() => {});
 
   return (
     <Show when={rIsOpenState()}>
@@ -249,28 +270,30 @@ export default function Popper(p: Props) {
               },
             }}
           >
-            <div
-              ref={arrowEl}
-              use:stylex={{
-                ...{
-                  ...arrowStyles,
-                  "box-sizing": "border-box",
-                  width: "6px",
-                  height: "6px",
-                  position: "absolute",
-                  top: rComputedPosition()
-                    ? `${rComputedPosition()!.middlewareData?.arrow?.y}px`
-                    : "0",
-                  left: rComputedPosition()
-                    ? `${rComputedPosition()!.middlewareData?.arrow?.x}px`
-                    : "0",
-                  transform: "rotate(45deg)",
-                  ...(rComputedPosition()
-                    ? { [rComputedPosition()!.staticSide]: "-3px" }
-                    : {}),
-                },
-              }}
-            ></div>
+            {constructor.arrow ? (
+              <div
+                ref={arrowEl}
+                use:stylex={{
+                  ...{
+                    ...arrowStyles,
+                    "box-sizing": "border-box",
+                    width: "6px",
+                    height: "6px",
+                    position: "absolute",
+                    top: rComputedPosition()
+                      ? `${rComputedPosition()!.middlewareData?.arrow?.y}px`
+                      : "0",
+                    left: rComputedPosition()
+                      ? `${rComputedPosition()!.middlewareData?.arrow?.x}px`
+                      : "0",
+                    transform: "rotate(45deg)",
+                    ...(rComputedPosition()
+                      ? { [rComputedPosition()!.staticSide]: "-3px" }
+                      : {}),
+                  },
+                }}
+              ></div>
+            ) : null}
             <span>{slots.defaultSlot}</span>
           </div>
         );

@@ -23,7 +23,6 @@ type Props = Constructor &
   ApiBindings;
 
 type Constructor = {
-  rootStylex?: StyleXValidSolidType;
   size?: "small" | "medium" | "large";
   variant?: "solid" | "outline" | "ghost" | "link";
   caret?: boolean;
@@ -33,6 +32,8 @@ type Constructor = {
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"];
   href?: string;
+  "pt:root"?: (() => StyleXValidSolidType) | StyleXValidSolidType;
+  "pt:icon"?: Partial<IconProps>;
 } & InputRefComponent;
 
 interface Slots {
@@ -51,6 +52,7 @@ interface Api {
 
 interface Events {
   onClick?: (e: MouseEvent) => void;
+  onMouseDown?: (e: MouseEvent) => void;
 }
 enum TagType {
   Button = "button",
@@ -231,29 +233,37 @@ export default function Button(p: Props) {
   return (
     <>
       <Dynamic
-        data-button-type={buttonType}
         component={elementTagType}
+        ref={(el: HTMLElement) => {
+          rootElRef = el;
+          stylex(el, () => ({
+            ...{
+              cursor: "pointer",
+              position: "relative",
+              display: "grid",
+              "place-items": "center",
+              "place-content": "center",
+              "grid-auto-flow":
+                buttonType !== ButtonType.Normal ? "row" : "column",
+              gap: "8px",
+              color: "currentColor",
+            },
+            ...typeStyles[buttonType][constructor.size],
+            ...typeStyles[buttonType].styles,
+            ...(constructor["pt:root"] &&
+            typeof constructor["pt:root"] === "function"
+              ? constructor["pt:root"]()
+              : constructor["pt:root"]),
+          }));
+        }}
+        data-button-type={buttonType}
         {...{
           ...(constructor.href && { href: constructor.href }),
           ...(rIsDisabledState() && { disabled: state.isDisabled }),
           ...(rIsLoadingState() && { "data-loading": "" }),
         }}
         onClick={events.onClick}
-        use:stylex={{
-          ...{
-            position: "relative",
-            display: "grid",
-            "place-items": "center",
-            "place-content": "center",
-            "grid-auto-flow":
-              buttonType !== ButtonType.Normal ? "row" : "column",
-            gap: "8px",
-            color: "currentColor",
-          },
-          ...typeStyles[buttonType][constructor.size],
-          ...typeStyles[buttonType].styles,
-          ...constructor.rootStylex,
-        }}
+        onMouseDown={events.onMouseDown}
       >
         {buttonType === ButtonType.Normal ? (
           <>
@@ -298,7 +308,14 @@ export default function Button(p: Props) {
                 if (constructor.icon === true) {
                   return slots.labelSlot;
                 } else {
-                  return <Icon name={constructor.icon!} />;
+                  return (
+                    <Icon
+                      {...{
+                        name: constructor.icon!,
+                        ...(constructor["pt:icon"] && constructor["pt:icon"]),
+                      }}
+                    />
+                  );
                 }
               })()}
               <span>{slots.labelSlot}</span>

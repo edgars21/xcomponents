@@ -92,8 +92,8 @@ export default function Icon(p: Props) {
     console.error(`Icon "${props.name}" not found in library"`);
     icon = libraries["default"]["question-mark"];
   }
- 
-  const result = parseSvg(icon);  
+
+  const result = parseSvg(icon);
   if (result) {
     const { attributes, innerSvg } = result;
     return (
@@ -104,6 +104,15 @@ export default function Icon(p: Props) {
         height={constructor.size}
         color={constructor.color}
         innerHTML={innerSvg}
+        ref={(el) => {
+          stylex(el as unknown as HTMLElement, () => ({
+            ...{
+            ...(constructor["pt:root"] && typeof constructor["pt:root"] === "function"
+                ? constructor["pt:root"]()
+                : constructor["pt:root"]),
+            },
+          }));
+        }}
       />
     );
   } else {

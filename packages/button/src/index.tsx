@@ -32,7 +32,10 @@ type Constructor = {
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"];
   href?: string;
-  "pt:root"?: (() => StyleXValidSolidType) | StyleXValidSolidType;
+  "pt:root"?: {
+    attr?: Record<string, string>;
+    stylex?: () => StyleXValidSolidType | StyleXValidSolidType;
+  };
   "pt:icon"?: Partial<IconProps>;
 } & InputRefComponent;
 
@@ -95,15 +98,15 @@ const typeStyles = {
 };
 
 const variantStyles = {
-  solid: { background: "blue", color: "white" },
+  solid: { backgroundColor: "blue", color: "white" },
   outline: {
-    background: "transparent",
+    backgroundColor: "transparent",
     border: "1px solid blue",
     color: "blue",
   },
-  ghost: { background: "transparent", color: "blue" },
+  ghost: { backgroundColor: "transparent", color: "blue" },
   link: {
-    background: "transparent",
+    backgroundColor: "transparent",
     color: "blue",
     textDecoration: "underline",
   },
@@ -206,7 +209,7 @@ export default function Button(p: Props) {
     }
   });
 
-  const caretJsx = constructor.caret ? <Icon name="ChevronDown" /> : null;
+  const caretJsx = constructor.caret ? <Icon name="chevron-down" /> : null;
 
   const startAdornmentJsx = (() => {
     return <></>;
@@ -230,12 +233,31 @@ export default function Button(p: Props) {
     return <></>;
   })();
 
+  const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
   return (
     <>
       <Dynamic
         component={elementTagType}
         ref={(el: HTMLElement) => {
           rootElRef = el;
+          console.log("computed stylex: ", {
+            ...{
+              cursor: "pointer",
+              position: "relative",
+              display: "grid",
+              "place-items": "center",
+              "place-content": "center",
+              "grid-auto-flow":
+                buttonType !== ButtonType.Normal ? "row" : "column",
+              gap: "8px",
+              color: "currentColor",
+            },
+            ...typeStyles[buttonType][constructor.size],
+            ...typeStyles[buttonType].styles,
+            ...(stylexValue && typeof stylexValue === "function"
+              ? stylexValue()
+              : stylexValue),
+        });
           stylex(el, () => ({
             ...{
               cursor: "pointer",
@@ -250,10 +272,9 @@ export default function Button(p: Props) {
             },
             ...typeStyles[buttonType][constructor.size],
             ...typeStyles[buttonType].styles,
-            ...(constructor["pt:root"] &&
-            typeof constructor["pt:root"] === "function"
-              ? constructor["pt:root"]()
-              : constructor["pt:root"]),
+            ...(stylexValue && typeof stylexValue === "function"
+              ? stylexValue()
+              : stylexValue),
           }));
         }}
         data-button-type={buttonType}
@@ -261,6 +282,7 @@ export default function Button(p: Props) {
           ...(constructor.href && { href: constructor.href }),
           ...(rIsDisabledState() && { disabled: state.isDisabled }),
           ...(rIsLoadingState() && { "data-loading": "" }),
+          ...attr,
         }}
         onClick={events.onClick}
         onMouseDown={events.onMouseDown}
@@ -280,7 +302,7 @@ export default function Button(p: Props) {
               {startAdornmentJsx}
             </div>
             <span>{slots.labelSlot}</span>
-            props.caret && !props.caretLeading && <Icon name="ChevronDown" />
+            props.caret && !props.caretLeading && <Icon name="chevron-down" />
             <div
               use:stylex={{
                 display: [

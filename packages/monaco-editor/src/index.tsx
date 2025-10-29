@@ -1,6 +1,6 @@
 import { untrack, onMount, onCleanup } from "solid-js";
 import { editor as monacoEditor } from "monaco-editor";
-import "monaco-editor/min/vs/editor/editor.main.css";
+import styles from "monaco-editor/min/vs/editor/editor.main.css?raw";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import type * as CSS from "csstype";
 import { stylex, type StyleXValidSolidType } from "@stylex/solid";
@@ -98,15 +98,18 @@ export default function MonacoEditor(p: Props) {
   });
 
   return (
-    <div
-      use:stylex={{
-        //@ts-ignore
-        width: constructor.width,
-        //@ts-ignore
-        height: constructor.height,
-        ...constructor["pt:root"],
-      }}
-      ref={rootEl}
-    ></div>
+    <>
+      <div
+        use:stylex={{
+          //@ts-ignore
+          width: constructor.width,
+          //@ts-ignore
+          height: constructor.height,
+          ...constructor["pt:root"],
+        }}
+        ref={rootEl}
+      ></div>
+      <style>{styles}</style>
+    </>
   );
 }

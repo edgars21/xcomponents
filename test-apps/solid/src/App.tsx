@@ -1,16 +1,8 @@
 // import Icon from "@xcomponents/icon";
-import Button from "@xcomponents/button";
-import Popper from "@xcomponents/popper";
-import Tooltip from "@xcomponents/tooltip";
-// import Test from "./Test";
-import { createSignal, Show } from "solid-js";
-import ProgressCircle from "@xcomponents/progress-circle";
+import Modal, { type Api } from "@xcomponents/modal";
 
 export default function App() {
-  const [open, setOpen] = createSignal(false);
-  const [buttonEl, setButtonEl] = createSignal<HTMLButtonElement | undefined>(
-    undefined
-  );
+  let moadlApi: Api;
 
   return (
     <div
@@ -23,28 +15,17 @@ export default function App() {
       }}
     >
       <div style="display: flex; flex-gap: 10px">
-        <Button
-          tooltipSlot={
-            <h1>
-              some shit inside{" "}
-              <div>
-                <ProgressCircle indeterminate />
-              </div>
-            </h1>
-          }
-          ref={setButtonEl}
-          rootStylex={{ width: "unset", height: "unset" }}
-          size="large"
-          icon="Activity"
-          caret
-          labelSlot="View"
+        Modal test
+        <button
+          onClick={() => {
+            moadlApi.open();
+          }}
         >
-          Click Me
-        </Button>
-        <Button
-        
-          icon="Activity"
-        >Here</Button>
+          Open Modal
+        </button>
+        <Modal ref={(api) => (moadlApi = api)}>
+          <h1>Inside the modal</h1>
+        </Modal>
       </div>
     </div>
   );

@@ -32,12 +32,14 @@ type Constructor = {
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"];
   href?: string;
-  "pt:root"?: {
-    attr?: Record<string, string>;
-    stylex?: () => StyleXValidSolidType | StyleXValidSolidType;
-  };
+  "pt:root"?: ElementSetter;
   "pt:icon"?: Partial<IconProps>;
 } & InputRefComponent;
+
+interface ElementSetter {
+  attr?: Record<string, string>;
+  stylex?: (() => StyleXValidSolidType) | StyleXValidSolidType;
+}
 
 interface Slots {
   defaultSlot?: JSX.Element;
@@ -98,19 +100,31 @@ const typeStyles = {
 };
 
 const variantStyles = {
-  solid: { backgroundColor: "blue", color: "white" },
+  solid: {
+    backgroundColor: "blue",
+    color: "white",
+    border: "none",
+    outline: "none",
+    boxShadow: "none",
+  },
   outline: {
     backgroundColor: "transparent",
     border: "1px solid blue",
     color: "blue",
   },
-  ghost: { backgroundColor: "transparent", color: "blue" },
+  ghost: {
+    backgroundColor: [["@hover", "rgba(255, 255, 255, 0.1)"], "transparent"],
+    color: "currentColor",
+    border: "none",
+    outline: "none",
+    boxShadow: "none",
+  },
   link: {
     backgroundColor: "transparent",
     color: "blue",
     textDecoration: "underline",
   },
-};
+} satisfies Record<string, StyleXValidSolidType>;
 
 interface State {
   isDisabled: boolean;
@@ -240,26 +254,9 @@ export default function Button(p: Props) {
         component={elementTagType}
         ref={(el: HTMLElement) => {
           rootElRef = el;
-          console.log("computed stylex: ", {
-            ...{
-              cursor: "pointer",
-              position: "relative",
-              display: "grid",
-              "place-items": "center",
-              "place-content": "center",
-              "grid-auto-flow":
-                buttonType !== ButtonType.Normal ? "row" : "column",
-              gap: "8px",
-              color: "currentColor",
-            },
-            ...typeStyles[buttonType][constructor.size],
-            ...typeStyles[buttonType].styles,
-            ...(stylexValue && typeof stylexValue === "function"
-              ? stylexValue()
-              : stylexValue),
-        });
           stylex(el, () => ({
             ...{
+              boxSizing: "border-box",
               cursor: "pointer",
               position: "relative",
               display: "grid",
@@ -272,6 +269,7 @@ export default function Button(p: Props) {
             },
             ...typeStyles[buttonType][constructor.size],
             ...typeStyles[buttonType].styles,
+            ...variantStyles[constructor.variant],
             ...(stylexValue && typeof stylexValue === "function"
               ? stylexValue()
               : stylexValue),

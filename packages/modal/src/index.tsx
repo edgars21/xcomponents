@@ -54,7 +54,7 @@ export interface Api {
 }
 
 interface Events {
-  onChange?: (value: string) => void;
+  onClose?: () => void;
 }
 
 export default function Modal(p: Props) {
@@ -105,6 +105,7 @@ export default function Modal(p: Props) {
       }
       state.isOpen = false;
       setrOpeningClosing(false);
+      events.onClose?.();
     },
   };
 
@@ -185,11 +186,7 @@ export default function Modal(p: Props) {
                     : constructor["pt:actions"].stylex)),
               }}
             >
-              <Button
-                icon="x"
-                size="small"
-                onClick={() => api.open()}
-              />
+              <Button icon="x" size="small" onClick={() => api.close()} />
             </div>
           )}
           {props.children}

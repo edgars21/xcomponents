@@ -32,6 +32,7 @@ type Constructor = {
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"];
   href?: string;
+  submit?: boolean;
   "pt:root"?: ElementSetter;
   "pt:icon"?: Partial<IconProps>;
 } & InputRefComponent;
@@ -140,6 +141,7 @@ export default function Button(p: Props) {
       variant: "solid",
       caret: false,
       caretLeading: false,
+      submit: false
     } as const),
     ...(props as Constructor),
   };
@@ -277,6 +279,7 @@ export default function Button(p: Props) {
         }}
         data-button-type={buttonType}
         {...{
+          ...(constructor.submit && { type: "submit" }),
           ...(constructor.href && { href: constructor.href }),
           ...(rIsDisabledState() && { disabled: state.isDisabled }),
           ...(rIsLoadingState() && { "data-loading": "" }),

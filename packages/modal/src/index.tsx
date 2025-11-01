@@ -13,6 +13,7 @@ false && stylex;
 
 export type Props = Constructor & Slots & Events;
 
+let overflow: { x: string; y: string } | null = null;
 interface ElementSetter {
   attr?: Record<string, string>;
   stylex?: (() => StyleXValidSolidType) | StyleXValidSolidType;
@@ -78,8 +79,6 @@ export default function Modal(p: Props) {
     isOpen: false,
   };
 
-  let overflow: { x: string; y: string } | null = null;
-
   const [rOpeningClosing, setrOpeningClosing] = createSignal(state.isOpen);
 
   const api: Api = {
@@ -87,13 +86,15 @@ export default function Modal(p: Props) {
       return state.isOpen;
     },
     open: () => {
-      const bodyStyles = window.getComputedStyle(document.body);
-      overflow = {
-        y: bodyStyles.getPropertyValue("overflow-y"),
-        x: bodyStyles.getPropertyValue("overflow-x"),
-      };
-      document.body.style.overflowY = "hidden";
-      document.body.style.overflowX = "hidden";
+      if (!overflow) {
+        const bodyStyles = window.getComputedStyle(document.body);
+        overflow = {
+          y: bodyStyles.getPropertyValue("overflow-y"),
+          x: bodyStyles.getPropertyValue("overflow-x"),
+        };
+        document.body.style.overflowY = "hidden";
+        document.body.style.overflowX = "hidden";
+      }
       state.isOpen = true;
       setrOpeningClosing(true);
     },

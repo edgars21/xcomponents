@@ -8,7 +8,7 @@ import {
   Show,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { stylex, type StyleXValidSolidType } from "@stylex/solid";
+import { stylex, type StyleXJs } from "@stylex/solid";
 import ProgressCircle from "@xcomponents/progress-circle";
 import Icon, { type Props as IconProps } from "@xcomponents/icon";
 import Tooltip from "@xcomponents/tooltip";
@@ -39,7 +39,7 @@ type Constructor = {
 
 interface ElementSetter {
   attr?: Record<string, string>;
-  stylex?: (() => StyleXValidSolidType) | StyleXValidSolidType;
+  stylex?: (() => StyleXJs) | StyleXJs;
 }
 
 interface Slots {
@@ -125,7 +125,7 @@ const variantStyles = {
     color: "blue",
     textDecoration: "underline",
   },
-} satisfies Record<string, StyleXValidSolidType>;
+} satisfies Record<string, StyleXJs>;
 
 interface State {
   isDisabled: boolean;
@@ -286,7 +286,7 @@ export default function Button(p: Props) {
           ...attr,
         }}
         onClick={events.onClick}
-        onMouseDown={events.onMouseDown}
+        on:mousedown={events.onMouseDown}
       >
         {buttonType === ButtonType.Normal ? (
           <>

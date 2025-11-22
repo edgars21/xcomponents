@@ -1,12 +1,13 @@
-import { untrack, onMount, onCleanup } from "solid-js";
+import { untrack, onMount, onCleanup, createEffect } from "solid-js";
 import { editor as monacoEditor } from "monaco-editor";
 import styles from "monaco-editor/min/vs/editor/editor.main.css?raw";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import type * as CSS from "csstype";
 import { stylex, type StyleXValidSolidType } from "@stylex/solid";
+import { type ToAccessorsCfg } from "@xcomponents/shared";
 false && stylex;
 
-export type Props = Constructor & Events;
+export type Props = Constructor & Events & ApiBindings;
 
 export interface Constructor {
   ref?: (api: Api) => void;
@@ -25,6 +26,15 @@ export interface Api {
   setValue: (value: string) => void;
   setTheme: (theme: string) => void;
 }
+
+type ApiBindings = ToAccessorsCfg<
+  {
+    apiSetValue: Api["setValue"];
+    apiSetTheme: Api["setTheme"];
+  },
+  true,
+  true
+>;
 
 interface Events {
   onChange?: (value: string) => void;
@@ -53,6 +63,8 @@ export default function MonacoEditor(p: Props) {
   };
 
   const events = { ...props } as Events;
+  const apiBindings = { ...props } as ApiBindings;
+  let isMounted = false;
 
   let rootEl: HTMLDivElement | undefined;
   let editor: monacoEditor.IStandaloneCodeEditor | undefined;
@@ -68,6 +80,20 @@ export default function MonacoEditor(p: Props) {
       editor!.updateOptions({ theme });
     },
   };
+
+  if (apiBindings.apiSetValue) {
+    if (typeof apiBindings.apiSetValue === "function") {
+      createEffect(() => {
+        if (!isMounted) {
+          constructor.value = apiBindings.apiSetValue();
+        } else {
+          api.setDisabled(apiBindings.apiSetValue());
+        }
+      });
+    } else {
+      constructor.value = apiBindings.apiSetValue
+    }
+  }
 
   onMount(() => {
     requestAnimationFrame(() => {
@@ -95,6 +121,7 @@ export default function MonacoEditor(p: Props) {
         editor!.dispose();
       });
     });
+    isMounted = true;
   });
 
   return (

@@ -21,7 +21,7 @@ import {
   type MiddlewareData,
   type OffsetOptions,
 } from "@floating-ui/dom";
-import { stylex, type StyleXValidSolidType } from "@stylex/solid";
+import { stylex, type StyleXJs } from "@stylex/solid";
 import {
   createEventListenerWithCleanupFactory,
   type ToAccessorsCfg,
@@ -33,7 +33,6 @@ export type Props = Constructor & {
 } & ApiBindings;
 
 export interface Constructor {
-  stylex?: StyleXValidSolidType;
   anchor: HTMLElement;
   placement?: FloatingUIPlacement;
   arrow?: boolean;
@@ -44,6 +43,11 @@ export interface Constructor {
         offset?: OffsetOptions | false;
       }
     | false;
+  "pt:root"?: ElementSetter;
+}
+interface ElementSetter {
+  attr?: Record<string, string>;
+  stylex?: (() => StyleXJs) | StyleXJs;
 }
 
 type Slots = {
@@ -219,16 +223,19 @@ export default function Popper(p: Props) {
     }[placement.split("-")[0]!];
   }
 
+  const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
   return (
     <Show when={rIsOpenState()}>
       {(() => {
         const rootStyles = {
           border: "1px solid gray",
-          "border-radius": "4px",
-          "box-shadow": "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-          "background-color": "#fff",
-          ...constructor.stylex,
-        } as StyleXValidSolidType;
+          borderRadius: "4px",
+          boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+          backgroundColor: "#fff",
+          ...(stylexValue && typeof stylexValue === "function"
+            ? stylexValue()
+            : stylexValue),
+        };
 
         let [borderSize, borderTyp, borderColor] =
           typeof rootStyles.border === "string"
@@ -245,7 +252,7 @@ export default function Popper(p: Props) {
 
         const arrowStyles = {
           // @ts-ignore
-          "background-color": rootStyles["background-color"],
+          backgroundColor: rootStyles.backgroundColor,
           ...(haveBorder && {
             border: `${borderSize} ${borderTyp}`,
             borderColor: rComputedPosition()
@@ -259,12 +266,13 @@ export default function Popper(p: Props) {
 
         return (
           <div
+            {...(attr || {})}
             ref={rootEl}
             use:stylex={{
               ...{
                 ...rootStyles,
                 position: "fixed",
-                "z-index": "9999",
+                zIndex: "9999",
                 top: rComputedPosition() ? `${rComputedPosition()!.y}px` : "0",
                 left: rComputedPosition() ? `${rComputedPosition()!.x}px` : "0",
               },
@@ -276,7 +284,7 @@ export default function Popper(p: Props) {
                 use:stylex={{
                   ...{
                     ...arrowStyles,
-                    "box-sizing": "border-box",
+                    boxSizing: "border-box",
                     width: "6px",
                     height: "6px",
                     position: "absolute",

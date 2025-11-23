@@ -29,7 +29,7 @@ export default function Tooltip(p: Props) {
 
   const constructor = {
     ...({
-      placement: "bottom",
+      placement: "top",
       arrow: true,
       trigger: "hover",
     } as const),
@@ -58,17 +58,22 @@ export default function Tooltip(p: Props) {
     return null;
   }
 
+  console.log("trigger is", constructor.trigger);
+
   return (
     <>
       {!constructor.anchor ? validAnchorElementFromDefaultSlot : null}
       <Popper
-        stylex={{
-          padding: "5px",
-          fontSize: "14px",
-          "color": "#fff",
-          border: "none",
-          boxShadow: "unset",
-          backgroundColor: "#fff",
+        pt:root={{
+          stylex: {
+            padding: "5px",
+            fontSize: "14px",
+            color: "#000",
+            border: "none",
+            boxShadow: "unset",
+            backgroundColor: "#fff",
+
+          }
         }}
         anchor={(constructor.anchor || validAnchorElementFromDefaultSlot)!}
         placement={constructor.placement}

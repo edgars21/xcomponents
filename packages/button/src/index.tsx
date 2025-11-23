@@ -141,7 +141,7 @@ export default function Button(p: Props) {
       variant: "solid",
       caret: false,
       caretLeading: false,
-      submit: false
+      submit: false,
     } as const),
     ...(props as Constructor),
   };
@@ -220,9 +220,9 @@ export default function Button(p: Props) {
 
   onMount(() => {
     if (constructor.ref) {
-      setrMounted(true);
       constructor.ref(rootElRef!);
     }
+    setrMounted(true);
   });
 
   const caretJsx = constructor.caret ? <Icon name="chevron-down" /> : null;
@@ -358,9 +358,11 @@ export default function Button(p: Props) {
         )}
       </Dynamic>
       {haveTooltip && (
-        <Show when={rMounted()}>
-          <Tooltip anchor={rootElRef!} tooltipSlot={slots.tooltipSlot} />
-        </Show>
+        <>
+          <Show when={rMounted()}>
+            <Tooltip anchor={rootElRef!} tooltipSlot={slots.tooltipSlot} />
+          </Show>
+        </>
       )}
     </>
   );

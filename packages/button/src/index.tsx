@@ -18,9 +18,7 @@ export type InputRefComponent = {
 };
 false && stylex;
 
-type Props = Constructor &
-  Omit<Slots, "defaultSlot"> & { children?: Slots["defaultSlot"] } & Events &
-  ApiBindings;
+export type Props = Constructor & Slots & Events & ApiBindings;
 
 type Constructor = {
   size?: "small" | "medium" | "large";
@@ -33,7 +31,9 @@ type Constructor = {
   endIcon?: IconProps["name"];
   href?: string;
   submit?: boolean;
+  align?: "start" | "center" | "end";
   "pt:root"?: ElementSetter;
+  "pt:label"?: ElementSetter;
   "pt:icon"?: Partial<IconProps>;
 } & InputRefComponent;
 
@@ -43,7 +43,7 @@ interface ElementSetter {
 }
 
 interface Slots {
-  defaultSlot?: JSX.Element;
+  children?: JSX.Element | string;
   labelSlot?: JSX.Element | string;
   startSlot?: JSX.Element;
   endSlot?: JSX.Element;
@@ -114,7 +114,7 @@ const variantStyles = {
     color: "blue",
   },
   ghost: {
-    backgroundColor: [["@hover", "rgba(255, 255, 255, 0.1)"], "transparent"],
+    backgroundColor: [[":hover", "rgba(255, 255, 255, 0.1)"], "transparent"],
     color: "currentColor",
     border: "none",
     outline: "none",
@@ -142,6 +142,7 @@ export default function Button(p: Props) {
       caret: false,
       caretLeading: false,
       submit: false,
+      align: "center",
     } as const),
     ...(props as Constructor),
   };
@@ -149,7 +150,10 @@ export default function Button(p: Props) {
   const apiBindings = { ...props } as ApiBindings;
   const slots = {
     ...props,
-    defaultSlot: children(() => props.children)(),
+    ...(!props.labelSlot &&
+      props.children && {
+        labelSlot: children(() => props.children)(),
+      }),
   } as Slots;
 
   const state = {
@@ -195,22 +199,13 @@ export default function Button(p: Props) {
 
   const elementTagType = constructor.href ? TagType.Link : TagType.Button;
 
-  const labelJsx =
-    slots.defaultSlot && !constructor.icon
-      ? slots.defaultSlot
-      : slots.labelSlot;
+  const labelJsx = slots.labelSlot;
 
   const buttonType = constructor.icon
     ? labelJsx
       ? ButtonType.IconLabel
       : ButtonType.Icon
     : ButtonType.Normal;
-
-  if (buttonType === ButtonType.Normal) {
-    if (slots.defaultSlot) {
-      slots.labelSlot = slots.defaultSlot;
-    }
-  }
 
   let rootElRef: HTMLElement | undefined;
 
@@ -226,27 +221,42 @@ export default function Button(p: Props) {
   });
 
   const caretJsx = constructor.caret ? <Icon name="chevron-down" /> : null;
+  const loadingJsx = <ProgressCircle indeterminate />;
 
   const startAdornmentJsx = (() => {
-    return <></>;
-    // if (props.startSlot) {
-    //   return props.startSlot;
-    // } else if (props.startIcon) {
-    //   return <Icon name={props.startIcon} />;
-    // } else if (caretJsx && props.caretLeading) {
-    //   return caretJsx;
-    // }
+    <div
+      use:stylex={{
+        display: ["", [rIsLoadingState() && !props.loadingTrailing, "none"]],
+      }}
+    >
+      {(() => {
+        if (slots.startSlot) {
+          return slots.startSlot;
+        } else if (constructor.startIcon) {
+          return <Icon name={constructor.startIcon} />;
+        } else if (caretJsx && props.caretLeading) {
+          return caretJsx;
+        }
+      })()}
+    </div>;
   })();
 
   const endAdornmentJsx = (() => {
-    // if (props.endSlot) {
-    //   return props.endSlot;
-    // } else if (props.endIcon) {
-    //   return <Icon name={props.endIcon} />;
-    // } else if (caretJsx && !props.caretLeading) {
-    //   return caretJsx;
-    // }
-    return <></>;
+    <div
+      use:stylex={{
+        display: ["", [rIsLoadingState() && !!props.loadingTrailing, "none"]],
+      }}
+    >
+      {(() => {
+        if (slots.endSlot) {
+          return slots.endSlot;
+        } else if (constructor.endIcon) {
+          return <Icon name={constructor.endIcon} />;
+        } else if (caretJsx && !props.caretLeading) {
+          return caretJsx;
+        }
+      })()}
+    </div>;
   })();
 
   const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
@@ -261,11 +271,17 @@ export default function Button(p: Props) {
               boxSizing: "border-box",
               cursor: "pointer",
               position: "relative",
-              display: "grid",
-              "place-items": "center",
-              "place-content": "center",
-              "grid-auto-flow":
-                buttonType !== ButtonType.Normal ? "row" : "column",
+              display: "flex",
+              ...(buttonType !== ButtonType.Normal
+                ? {
+                    justifyContent: "center",
+                    alignItems: constructor.align,
+                    flexDirection: "column",
+                  }
+                : {
+                    justifyContent: constructor.align,
+                    alignItems: "center",
+                  }),
               gap: "8px",
               color: "currentColor",
             },
@@ -290,32 +306,23 @@ export default function Button(p: Props) {
       >
         {buttonType === ButtonType.Normal ? (
           <>
-            rIsLoadingState() && !props.loadingTrailing && (
-            <ProgressCircle indeterminate />)
+            {rIsLoadingState() && !props.loadingTrailing && loadingJsx}
+            {startAdornmentJsx}
             <div
+              {...{
+                ...constructor["pt:label"]?.attr,
+              }}
               use:stylex={{
-                display: [
-                  "",
-                  [rIsLoadingState() && !props.loadingTrailing, "none"],
-                ],
+                ...(constructor["pt:label"]?.stylex &&
+                typeof constructor["pt:label"]?.stylex === "function"
+                  ? constructor["pt:label"]?.stylex()
+                  : constructor["pt:label"]?.stylex),
               }}
             >
-              {startAdornmentJsx}
+              {slots.labelSlot}
             </div>
-            <span>{slots.labelSlot}</span>
-            props.caret && !props.caretLeading && <Icon name="chevron-down" />
-            <div
-              use:stylex={{
-                display: [
-                  "",
-                  [rIsLoadingState() && !!props.loadingTrailing, "none"],
-                ],
-              }}
-            >
-              {endAdornmentJsx}
-            </div>
-            rIsLoadingState() && props.loadingTrailing && (
-            <ProgressCircle indeterminate />)
+            {endAdornmentJsx}
+            {rIsLoadingState() && props.loadingTrailing && loadingJsx}
           </>
         ) : (
           <>

@@ -1,0 +1,29 @@
+{
+  "name": "@xcomponents/menu",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": "Edgars Snepsts",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "cdn/**/*"
+  ],
+  "devDependencies": {
+    "esbuild-plugin-solid": "^0.6.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.9"
+  },
+  "dependencies": {
+    "@stylex/solid": "file:file:/Users/edgars/1_Projects/13.8_stylex/packages/solid/",
+    "@xcomponents/button": "file:/Users/edgars/1_Projects/13.9_xcomponents/packages/button"
+  }
+}

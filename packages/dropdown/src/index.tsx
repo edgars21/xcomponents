@@ -15,7 +15,7 @@ false && stylex;
 export type Props = Constructor & Events;
 
 export interface Constructor {
-  ref: (api: Api) => void;
+  ref?: (api: Api) => void;
   menu?: MenuProps;
   anchor: HTMLElement | JSX.Element;
   placement?: PopperConstructor["placement"];

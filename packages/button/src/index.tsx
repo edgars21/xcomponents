@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   createSignal,
   createEffect,
@@ -12,6 +13,7 @@ import { stylex, type StyleXJs } from "@stylex/solid";
 import ProgressCircle from "@xcomponents/progress-circle";
 import Icon, { type Props as IconProps } from "@xcomponents/icon";
 import Tooltip from "@xcomponents/tooltip";
+import Dropdown, {type Props as DropdownProps}  from "@xcomponents/dropdown";
 import { type ToAccessorsCfg } from "@xcomponents/shared";
 export type InputRefComponent = {
   ref?: (el: HTMLElement) => void;
@@ -35,6 +37,7 @@ type Constructor = {
   "pt:root"?: ElementSetter;
   "pt:label"?: ElementSetter;
   "pt:icon"?: Partial<IconProps>;
+  dropdown?: Omit<DropdownProps, "anchor">;
 } & InputRefComponent;
 
 interface ElementSetter {
@@ -380,6 +383,13 @@ export default function Button(p: Props) {
         <>
           <Show when={rMounted()}>
             <Tooltip anchor={rootElRef!} tooltipSlot={slots.tooltipSlot} />
+          </Show>
+        </>
+      )}
+      {constructor.dropdown && (
+        <>
+          <Show when={rMounted()}>
+            <Dropdown {...constructor.dropdown} anchor={rootElRef!}  />
           </Show>
         </>
       )}

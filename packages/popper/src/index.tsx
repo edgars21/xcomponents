@@ -30,9 +30,11 @@ false && stylex;
 
 export type Props = Constructor & {
   children: Slots["defaultSlot"];
-} & ApiBindings;
+} & ApiBindings &
+  Events;
 
 export interface Constructor {
+  ref: (api: Api) => void;
   anchor: HTMLElement;
   placement?: FloatingUIPlacement;
   arrow?: boolean;
@@ -44,6 +46,7 @@ export interface Constructor {
       }
     | false;
   "pt:root"?: ElementSetter;
+  sameWidth?: boolean;
 }
 interface ElementSetter {
   attr?: Record<string, string>;
@@ -56,12 +59,23 @@ type Slots = {
 
 export type ApiBindings = ToAccessorsCfg<Api, true, true>;
 
+interface Events {
+  onClick?: (e: Event) => void;
+}
+
 export interface Api {
-  setOpen: (open: boolean) => void;
+  readonly isOpen: boolean;
+  open: () => void;
+  close: () => void;
 }
 
 export default function Popper(p: Props) {
-  const props = untrack(() => p);
+  const props = Object.entries(untrack(() => p))
+    .filter(([_, value]) => value !== undefined)
+    .reduce<any>((obj, [key, value]) => {
+      obj[key] = value;
+      return obj;
+    }, {}) as Props;
 
   const constructor = {
     ...({
@@ -69,11 +83,13 @@ export default function Popper(p: Props) {
       arrow: false,
       trigger: "manual",
       autoUpdate: false,
+      sameWidth: false,
     } as const),
     ...(props as Constructor),
   };
-  // const events = { ...props } as Events;
-  const apiBindings = { ...props } as ApiBindings;
+
+  const events = { ...props } as Events;
+
   const slots = {
     ...props,
     defaultSlot: children(() => props.children)(),
@@ -82,150 +98,91 @@ export default function Popper(p: Props) {
   const [addEventListenerWithCleanup, cleanupEventListeners] =
     createEventListenerWithCleanupFactory();
 
-  const state = {
-    isOpen: false,
-  };
-
-  let rootEl: HTMLDivElement | undefined;
+  let rootEl: HTMLDivElement;
   let arrowEl: HTMLDivElement | undefined;
 
-  const [rIsOpenState, setrIsOpenState] = createSignal(false);
+  let isOpen = false;
+  const [rIsOpen, setrIsOpen] = createSignal(false);
 
-  const [rAvailableHeight, setrAvailableHeight] = createSignal<number | null>(
-    null
-  );
-
-  const [rComputedPosition, setrComputedPosition] = createSignal<{
-    x: number;
-    y: number;
-    placement: FloatingUIPlacement;
-    middlewareData: MiddlewareData;
-    staticSide: string;
-  } | null>(null);
+  let openCleanup: (() => void) | undefined;
 
   const api: Api = {
-    setOpen: (open: boolean) => {
-      if (open === state.isOpen) return;
-      state.isOpen = open;
-      setrIsOpenState(open);
-      queueMicrotask(() => {
-        if (constructor.autoUpdate) {
-          const cleanup = autoUpdate(
-            constructor.anchor,
-            rootEl!,
-            computePopperPosition
-          );
-          onCleanup(() => {
-            cleanup();
-          });
-        } else {
-          computePopperPosition();
-        }
-      });
+    get isOpen() {
+      return isOpen;
+    },
+    open: () => {
+      if (isOpen) return;
+      isOpen = true;
+      setrIsOpen(true);
+      setTimeout(() => {
+        openCleanup = addEventListenerWithCleanup(
+          window,
+          "click",
+          (e: Event) => {
+            if (!rootEl!.contains(e.target as Node)) {
+              api.close();
+            }
+          }
+        );
+      }, 0);
+    },
+    close: () => {
+      if (!isOpen) return;
+      isOpen = false;
+      setrIsOpen(false);
+      if (openCleanup) {
+        openCleanup();
+      }
     },
   };
 
-  if (apiBindings.setOpen) {
-    createEffect(() => {
-      api.setOpen(
-        typeof apiBindings.setOpen === "function"
-          ? apiBindings.setOpen()
-          : apiBindings.setOpen || false
-      );
-    });
-  }
+  // if (apiBindings.setOpen) {
+  //   createEffect(() => {
+  //     api.setOpen(
+  //       typeof apiBindings.setOpen === "function"
+  //         ? apiBindings.setOpen()
+  //         : apiBindings.setOpen || false
+  //     );
+  //   });
+  // }
 
-  if (constructor.trigger !== "manual") {
-    switch (constructor.trigger) {
-      case "click":
-        addEventListenerWithCleanup(constructor.anchor, "click", () => {
-          function onOutsideClick(e: MouseEvent) {
-            if (!rootEl!.contains(e.target as Node)) {
-              api.setOpen(false);
-              window.removeEventListener("click", onOutsideClick);
+  onMount(() => {
+    if (constructor.trigger !== "manual") {
+      switch (constructor.trigger) {
+        case "click":
+          addEventListenerWithCleanup(constructor.anchor, "click", () => {
+            if (isOpen) {
+              api.close();
+            } else {
+              api.open();
             }
-          }
-
-          if (state.isOpen) {
-            api.setOpen(false);
-          } else {
-            setTimeout(() => {
-              window.addEventListener("click", onOutsideClick);
-            }, 0);
-            api.setOpen(true);
-          }
-        });
-        break;
-      case "hover":
-        addEventListenerWithCleanup(constructor.anchor, "mouseenter", () => {
-          function onMouseLeave() {
-            api.setOpen(false);
-          }
-          constructor.anchor.addEventListener("mouseleave", onMouseLeave, {
-            once: true,
           });
-          api.setOpen(true);
-        });
-        break;
-    }
-  }
-
-  async function computePopperPosition() {
-    const { x, y, placement, middlewareData } = await computePosition(
-      constructor.anchor,
-      rootEl!,
-      {
-        strategy: "fixed",
-        placement: constructor.placement,
-        middleware: [
-          ...(constructor?.middlewares === false
-            ? []
-            : [
-                ...(constructor?.middlewares?.offset === false
-                  ? []
-                  : [offset(constructor?.middlewares?.offset ?? 6)]),
-                // flip(),
-                shift({ crossAxis: true, padding: 3 }),
-              ]),
-          ...(constructor.arrow ? [arrow({ element: arrowEl! })] : []),
-          // size({
-          //   apply({ availableHeight }) {
-          //     setrAvailableHeight(availableHeight - 6);
-          //   },
-          // }),
-        ],
+          break;
+        case "hover":
+          addEventListenerWithCleanup(constructor.anchor, "mouseenter", () => {
+            function onMouseLeave() {
+              api.close();
+            }
+            constructor.anchor.addEventListener("mouseleave", onMouseLeave, {
+              once: true,
+            });
+            api.open();
+          });
+          break;
       }
-    );
-    setrComputedPosition({
-      x,
-      y,
-      placement,
-      middlewareData,
-      staticSide: {
-        top: "bottom",
-        right: "left",
-        bottom: "top",
-        left: "right",
-      }[placement.split("-")[0]!]!,
-    });
+    }
+    if (constructor.ref) {
+      constructor.ref(api);
+    }
+  });
 
-    // if (this.sameWidth) {
-    //   const anchorWidth = this.anchorElement.offsetWidth;
-
-    //   this._elTooltip.style.setProperty("width", anchorWidth + "px");
-    // }
-
-    const staticSide = {
-      top: "bottom",
-      right: "left",
-      bottom: "top",
-      left: "right",
-    }[placement.split("-")[0]!];
-  }
+  onCleanup(() => {
+    cleanupEventListeners();
+  });
 
   const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
   return (
-    <Show when={rIsOpenState()}>
+    <Show when={rIsOpen()}>
       {(() => {
         const rootStyles = {
           border: "1px solid gray",
@@ -250,32 +207,91 @@ export default function Popper(p: Props) {
 
         const haveBorder = !!borderSize && !!borderTyp && !!borderColor;
 
+        const staticSide = {
+          top: "bottom",
+          right: "left",
+          bottom: "top",
+          left: "right",
+        }[constructor.placement.split("-")[0]!]!;
+
         const arrowStyles = {
           // @ts-ignore
           backgroundColor: rootStyles.backgroundColor,
           ...(haveBorder && {
             border: `${borderSize} ${borderTyp}`,
-            borderColor: rComputedPosition()
-              ? diamondBorderColor(
-                  rComputedPosition()!.staticSide as Side,
-                  borderColor
-                )
-              : "transparent",
+            borderColor: diamondBorderColor(staticSide as Side, borderColor),
           }),
         };
+
+        const [rArrowPos, setrArrowPos] = createSignal<{
+          x: number;
+          y: number;
+        }>();
 
         return (
           <div
             {...(attr || {})}
-            ref={rootEl}
+            ref={async (el) => {
+              rootEl = el;
+              const update = async () => {
+                const { x, y, placement, middlewareData } =
+                  await computePosition(constructor.anchor, rootEl, {
+                    strategy: "fixed",
+                    placement: constructor.placement,
+                    middleware: [
+                      ...(constructor?.middlewares === false
+                        ? []
+                        : [
+                            ...(constructor?.middlewares?.offset === false
+                              ? []
+                              : [
+                                  offset(constructor?.middlewares?.offset ?? 6),
+                                ]),
+                            // flip(),
+                            shift({ crossAxis: true, padding: 3 }),
+                          ]),
+                      ...(constructor.arrow
+                        ? [arrow({ element: arrowEl! })]
+                        : []),
+                    ],
+                  });
+                stylex(rootEl!, () => ({
+                  top: `${y}px`,
+                  left: `${x}px`,
+                  visibility: "visible",
+                }));
+                if (middlewareData.arrow) {
+                  setrArrowPos({
+                    x: middlewareData.arrow.x || 0,
+                    y: middlewareData.arrow.y || 0,
+                  });
+                }
+              };
+              if (constructor.autoUpdate) {
+                const cleanup = autoUpdate(constructor.anchor, rootEl, update);
+              } else {
+                update();
+              }
+            }}
             use:stylex={{
               ...{
                 ...rootStyles,
                 position: "fixed",
                 zIndex: "9999",
-                top: rComputedPosition() ? `${rComputedPosition()!.y}px` : "0",
-                left: rComputedPosition() ? `${rComputedPosition()!.x}px` : "0",
+                visibility: "hidden",
+                top: 0,
+                left: 0,
+                ...(constructor.sameWidth && {
+                  width: `${constructor.anchor.offsetWidth}px`,
+                }),
               },
+            }}
+            {...{
+              ...(events.onClick && {
+                onClick: (e: Event) => {
+                  events.onClick!(e);
+                },
+              }),
             }}
           >
             {constructor.arrow ? (
@@ -288,16 +304,10 @@ export default function Popper(p: Props) {
                     width: "6px",
                     height: "6px",
                     position: "absolute",
-                    top: rComputedPosition()
-                      ? `${rComputedPosition()!.middlewareData?.arrow?.y}px`
-                      : "0",
-                    left: rComputedPosition()
-                      ? `${rComputedPosition()!.middlewareData?.arrow?.x}px`
-                      : "0",
+                    top: (rArrowPos()?.y || 0) + "px",
+                    left: (rArrowPos()?.x || 0) + "px",
                     transform: "rotate(45deg)",
-                    ...(rComputedPosition()
-                      ? { [rComputedPosition()!.staticSide]: "-3px" }
-                      : {}),
+                    [staticSide]: "-3px",
                   },
                 }}
               ></div>
@@ -319,12 +329,12 @@ function diamondBorderColor(
 ) {
   switch (outside) {
     case "top":
-      return `${color} ${transparent} ${transparent} ${color}`; // top + left
+      return `${color} ${transparent} ${transparent} ${color}`;
     case "right":
-      return `${color} ${color} ${transparent} ${transparent}`; // top + right
+      return `${color} ${color} ${transparent} ${transparent}`;
     case "bottom":
-      return `${transparent} ${color} ${color} ${transparent}`; // right + bottom
+      return `${transparent} ${color} ${color} ${transparent}`;
     case "left":
-      return `${transparent} ${transparent} ${color} ${color}`; // bottom + left
+      return `${transparent} ${transparent} ${color} ${color}`;
   }
 }

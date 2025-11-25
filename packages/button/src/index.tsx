@@ -114,7 +114,7 @@ const variantStyles = {
     color: "blue",
   },
   ghost: {
-    backgroundColor: [[":hover", "rgba(255, 255, 255, 0.1)"], "transparent"],
+    backgroundColor: [[":hover", "rgba(0, 0, 0, 0.1)"], "transparent"],
     color: "currentColor",
     border: "none",
     outline: "none",
@@ -224,39 +224,51 @@ export default function Button(p: Props) {
   const loadingJsx = <ProgressCircle indeterminate />;
 
   const startAdornmentJsx = (() => {
-    <div
-      use:stylex={{
-        display: ["", [rIsLoadingState() && !props.loadingTrailing, "none"]],
-      }}
-    >
-      {(() => {
-        if (slots.startSlot) {
-          return slots.startSlot;
-        } else if (constructor.startIcon) {
-          return <Icon name={constructor.startIcon} />;
-        } else if (caretJsx && props.caretLeading) {
-          return caretJsx;
-        }
-      })()}
-    </div>;
+    let inside = null;
+    if (slots.startSlot) {
+      inside = slots.startSlot;
+    } else if (constructor.startIcon) {
+      inside = <Icon name={constructor.startIcon} />;
+    } else if (caretJsx && props.caretLeading) {
+      inside = caretJsx;
+    }
+
+    if (!inside) {
+      return null;
+    }
+    return (
+      <div
+        use:stylex={{
+          display: ["", [rIsLoadingState() && !props.loadingTrailing, "none"]],
+        }}
+      >
+        {inside}
+      </div>
+    );
   })();
 
   const endAdornmentJsx = (() => {
-    <div
-      use:stylex={{
-        display: ["", [rIsLoadingState() && !!props.loadingTrailing, "none"]],
-      }}
-    >
-      {(() => {
-        if (slots.endSlot) {
-          return slots.endSlot;
-        } else if (constructor.endIcon) {
-          return <Icon name={constructor.endIcon} />;
-        } else if (caretJsx && !props.caretLeading) {
-          return caretJsx;
-        }
-      })()}
-    </div>;
+    let inside = null;
+    if (slots.endSlot) {
+      inside = slots.endSlot;
+    } else if (constructor.endIcon) {
+      inside = <Icon name={constructor.endIcon} />;
+    } else if (caretJsx && !props.caretLeading) {
+      inside = caretJsx;
+    }
+
+    if (!inside) {
+      return null;
+    }
+    return (
+      <div
+        use:stylex={{
+          display: ["", [rIsLoadingState() && !!props.loadingTrailing, "none"]],
+        }}
+      >
+        {inside}
+      </div>
+    );
   })();
 
   const { stylex: stylexValue, attr } = constructor["pt:root"] || {};

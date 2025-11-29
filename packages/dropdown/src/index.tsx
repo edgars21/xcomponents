@@ -162,19 +162,22 @@ export default function Dropdown(p: Props) {
             };
 
             return (
-              <Show when={uniqueRerenderMenuKey()}>
-              {(() => {
-                console.log("rerendering menu");
-                return <Menu
-                  {...constructor.menu}
-                  pt:root={{
-                    stylex: {
-                      width: "100%",
-                    },
-                  }}
-                />
-              })()}
-              </Show>
+              <div>
+                <Show when={uniqueRerenderMenuKey()} keyed>
+                  {(() => {
+                    return (
+                      <Menu
+                        {...constructor.menu}
+                        pt:root={{
+                          stylex: {
+                            width: "100%",
+                          },
+                        }}
+                      />
+                    );
+                  })()}
+                </Show>
+              </div>
             );
           } else {
             return slots.children!;

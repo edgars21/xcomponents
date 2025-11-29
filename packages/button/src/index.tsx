@@ -307,11 +307,6 @@ export default function Button(p: Props) {
                 ? stylexValue()
                 : stylexValue),
             };
-          if (values.log) {
-            console.log("-------------> button runs here", el);
-            console.log("button styles", values);
-            window.button = el
-          }
           stylex(el, () => ({
             ...{
               boxSizing: "border-box",

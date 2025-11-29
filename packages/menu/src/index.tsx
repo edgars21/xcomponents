@@ -140,7 +140,6 @@ export default function Menu(p: Props) {
               pt:root={{
                 stylex: () => ({
                   // @ts-ignore
-                  log: true,
                   width: "100%",
                   ...(rSelected().includes(item.value) && {
                     backgroundColor: [

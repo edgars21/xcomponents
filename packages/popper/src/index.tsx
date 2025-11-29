@@ -191,7 +191,7 @@ export default function Popper(p: Props) {
 
   const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
   return (
-    <Show when={rIsOpen()} keyed>
+    <Show when={rIsOpen()}>
       {(() => {
         const rootStyles = {
           border: "1px solid gray",

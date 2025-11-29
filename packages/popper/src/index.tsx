@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   type JSX,
   untrack,
@@ -61,6 +62,8 @@ export type ApiBindings = ToAccessorsCfg<Api, true, true>;
 
 interface Events {
   onClick?: (e: Event) => void;
+  onOpen?: (api: Api) => void;
+  onClose?: (api: Api) => void;
 }
 
 export interface Api {
@@ -114,6 +117,9 @@ export default function Popper(p: Props) {
       if (isOpen) return;
       isOpen = true;
       setrIsOpen(true);
+      if (events.onOpen) {
+        events.onOpen(api);
+      }
       setTimeout(() => {
         openCleanup = addEventListenerWithCleanup(
           window,
@@ -132,6 +138,9 @@ export default function Popper(p: Props) {
       setrIsOpen(false);
       if (openCleanup) {
         openCleanup();
+      }
+      if (events.onClose) {
+        events.onClose(api);
       }
     },
   };
@@ -182,7 +191,7 @@ export default function Popper(p: Props) {
 
   const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
   return (
-    <Show when={rIsOpen()}>
+    <Show when={rIsOpen()} keyed>
       {(() => {
         const rootStyles = {
           border: "1px solid gray",
@@ -288,7 +297,7 @@ export default function Popper(p: Props) {
             }}
             {...{
               ...(events.onClick && {
-                onClick: (e: Event) => {
+                "on:click": (e: Event) => {
                   events.onClick!(e);
                 },
               }),

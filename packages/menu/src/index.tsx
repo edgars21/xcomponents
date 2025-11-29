@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { type JSX, untrack, children, For, createSignal } from "solid-js";
 import Popper, {
   type Constructor as PopperConstructor,
@@ -57,9 +58,6 @@ export default function Menu(p: Props) {
       ? 16
       : 0
     : 0;
-
-  console.log("hasStartAdornment", hasStartAdornment);
-  console.log("startSpace", startSpace);
 
   const selected: Set<Item> = new Set();
   const [rSelected, setRSelected] = createSignal<string[]>([]);
@@ -131,19 +129,18 @@ export default function Menu(p: Props) {
                 }}
               ></div>
             ) : null;
-          console.log(
-            "item",
-            item.value,
-            !item?.startSlot,
-            !item.startIcon,
-            item.caretLeading && !item.caret
-          );
           return (
             <Button
               align={constructor.align}
               variant="ghost"
+              {...(rSelected().includes(item.value) && {
+
+                "should-be-here": true,
+              })}
               pt:root={{
                 stylex: () => ({
+                  // @ts-ignore
+                  log: true,
                   width: "100%",
                   ...(rSelected().includes(item.value) && {
                     backgroundColor: [

@@ -58,8 +58,6 @@ export default function Tooltip(p: Props) {
     return null;
   }
 
-  console.log("trigger is", constructor.trigger);
-
   return (
     <>
       {!constructor.anchor ? validAnchorElementFromDefaultSlot : null}

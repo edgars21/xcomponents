@@ -1,8 +1,9 @@
 // @ts-nocheck
-import { type JSX, untrack, children, For, createSignal } from "solid-js";
+import { type JSX, untrack, children, For, createSignal, Show } from "solid-js";
 import Popper, {
   type Constructor as PopperConstructor,
   type ApiBindings as PopperApiBindings,
+  type Events as PopperEvents,
   type Api as PopperApi,
 } from "@xcomponents/popper";
 import { stylex, type StyleXJs } from "@stylex/solid";
@@ -22,6 +23,13 @@ export interface Constructor {
   trigger?: PopperConstructor["trigger"];
   closeOnMenuAction?: boolean;
   closeOnInsideClick?: boolean;
+  sameWidth?: boolean;
+  "pt:root"?: ElementSetter;
+}
+
+interface ElementSetter {
+  attr?: Record<string, string>;
+  stylex?: (() => StyleXJs) | StyleXJs;
 }
 
 interface Slots {
@@ -40,9 +48,7 @@ enum ContentType {
   Custom,
 }
 
-interface Events {
-  onClick?: (e: Event) => void;
-}
+type Events = PopperEvents;
 
 export default function Dropdown(p: Props) {
   const props = untrack(() => p);
@@ -52,6 +58,7 @@ export default function Dropdown(p: Props) {
       trigger: "click",
       closeOnMenuAction: false,
       closeOnInsideClick: false,
+      sameWidth: true,
     } as const),
     ...(props as Constructor),
   };
@@ -66,6 +73,7 @@ export default function Dropdown(p: Props) {
   }
 
   const anchor = potentialAnchoreElement;
+  let [uniqueRerenderMenuKey, setUniqueRerenderMenuKey] = createSignal(1);
 
   const slots = {
     ...props,
@@ -92,11 +100,16 @@ export default function Dropdown(p: Props) {
 
   return (
     <>
-     {constructor.anchor instanceof HTMLElement ? null : constructor.anchor}
+      {constructor.anchor instanceof HTMLElement ? null : constructor.anchor}
       <Popper
-        sameWidth
+        sameWidth={constructor.sameWidth}
         ref={(api) => {
           menuApi = api;
+          const oldOpen = api.open;
+          api.open = () => {
+            setUniqueRerenderMenuKey((k) => k + 1);
+            oldOpen();
+          };
           if (constructor.ref) {
             constructor.ref(api);
           }
@@ -106,8 +119,13 @@ export default function Dropdown(p: Props) {
             boxShadow: "rgba(149, 157, 165, 0.2) 0px 8px 24px",
             border: "1px solid #e0e0e0",
             backgroundColor: "#fff",
+            color: "#000",
             borderRadius: "8px",
             overflow: "hidden",
+            ...(constructor["pt:root"]?.stylex &&
+            typeof constructor["pt:root"]?.stylex === "function"
+              ? constructor["pt:root"]?.stylex()
+              : constructor["pt:root"]?.stylex),
           },
         }}
         anchor={anchor}
@@ -117,6 +135,16 @@ export default function Dropdown(p: Props) {
           ...(events.onClick && {
             onClick: (e: Event) => {
               events.onClick!(e);
+            },
+          }),
+          ...(events.onOpen && {
+            onOpen: (api) => {
+              events.onOpen!(api);
+            },
+          }),
+          ...(events.onClose && {
+            onClose: (api) => {
+              events.onClose!(api);
             },
           }),
         }}
@@ -134,14 +162,19 @@ export default function Dropdown(p: Props) {
             };
 
             return (
-              <Menu
-                {...constructor.menu}
-                pt:root={{
-                  stylex: {
-                    width: "100%",
-                  },
-                }}
-              />
+              <Show when={uniqueRerenderMenuKey()}>
+              {(() => {
+                console.log("rerendering menu");
+                return <Menu
+                  {...constructor.menu}
+                  pt:root={{
+                    stylex: {
+                      width: "100%",
+                    },
+                  }}
+                />
+              })()}
+              </Show>
             );
           } else {
             return slots.children!;

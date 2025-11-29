@@ -13,7 +13,7 @@ import { stylex, type StyleXJs } from "@stylex/solid";
 import ProgressCircle from "@xcomponents/progress-circle";
 import Icon, { type Props as IconProps } from "@xcomponents/icon";
 import Tooltip from "@xcomponents/tooltip";
-import Dropdown, {type Props as DropdownProps}  from "@xcomponents/dropdown";
+import Dropdown, { type Props as DropdownProps } from "@xcomponents/dropdown";
 import { type ToAccessorsCfg } from "@xcomponents/shared";
 export type InputRefComponent = {
   ref?: (el: HTMLElement) => void;
@@ -281,6 +281,37 @@ export default function Button(p: Props) {
         component={elementTagType}
         ref={(el: HTMLElement) => {
           rootElRef = el;
+          const values = {
+              ...{
+                boxSizing: "border-box",
+                cursor: "pointer",
+                position: "relative",
+                display: "flex",
+                ...(buttonType !== ButtonType.Normal
+                  ? {
+                      justifyContent: "center",
+                      alignItems: constructor.align,
+                      flexDirection: "column",
+                    }
+                  : {
+                      justifyContent: constructor.align,
+                      alignItems: "center",
+                    }),
+                gap: "8px",
+                color: "currentColor",
+              },
+              ...typeStyles[buttonType][constructor.size],
+              ...typeStyles[buttonType].styles,
+              ...variantStyles[constructor.variant],
+              ...(stylexValue && typeof stylexValue === "function"
+                ? stylexValue()
+                : stylexValue),
+            };
+          if (values.log) {
+            console.log("-------------> button runs here", el);
+            console.log("button styles", values);
+            window.button = el
+          }
           stylex(el, () => ({
             ...{
               boxSizing: "border-box",
@@ -316,7 +347,7 @@ export default function Button(p: Props) {
           ...(rIsLoadingState() && { "data-loading": "" }),
           ...attr,
         }}
-        onClick={events.onClick}
+        on:click={events.onClick}
         on:mousedown={events.onMouseDown}
       >
         {buttonType === ButtonType.Normal ? (
@@ -389,7 +420,7 @@ export default function Button(p: Props) {
       {constructor.dropdown && (
         <>
           <Show when={rMounted()}>
-            <Dropdown {...constructor.dropdown} anchor={rootElRef!}  />
+            <Dropdown {...constructor.dropdown} anchor={rootElRef!} />
           </Show>
         </>
       )}

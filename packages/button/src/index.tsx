@@ -15,14 +15,12 @@ import Icon, { type Props as IconProps } from "@xcomponents/icon";
 import Tooltip from "@xcomponents/tooltip";
 import Dropdown, { type Props as DropdownProps } from "@xcomponents/dropdown";
 import { type ToAccessorsCfg } from "@xcomponents/shared";
-export type InputRefComponent = {
-  ref?: (el: HTMLElement) => void;
-};
 false && stylex;
 
 export type Props = Constructor & Slots & Events & ApiBindings;
 
 type Constructor = {
+  ref?: (api: Api) => void;
   size?: "small" | "medium" | "large";
   variant?: "solid" | "outline" | "ghost" | "link";
   caret?: boolean;
@@ -33,12 +31,15 @@ type Constructor = {
   endIcon?: IconProps["name"];
   href?: string;
   submit?: boolean;
+  togglable?: boolean;
+  initToggled?: boolean;
+  preventToogleOnClick?: boolean;
   align?: "start" | "center" | "end";
   "pt:root"?: ElementSetter;
   "pt:label"?: ElementSetter;
   "pt:icon"?: Partial<IconProps>;
   dropdown?: Omit<DropdownProps, "anchor">;
-} & InputRefComponent;
+};
 
 interface ElementSetter {
   attr?: Record<string, string>;
@@ -62,6 +63,7 @@ interface Api {
 interface Events {
   onClick?: (e: MouseEvent) => void;
   onMouseDown?: (e: MouseEvent) => void;
+  onToggle?: (toggled: boolean) => void;
 }
 enum TagType {
   Button = "button",
@@ -78,9 +80,9 @@ const sizeStyles = {};
 
 const typeStyles = {
   [ButtonType.Normal]: {
-    small: { height: "24px", fontSize: "12px" },
-    medium: { height: "32px", fontSize: "14px" },
-    large: { height: "40px", fontSize: "16px" },
+    small: { height: "24px", fontSize: "11px" },
+    medium: { height: "28px", fontSize: "13px" },
+    large: { height: "32px", fontSize: "15px" },
     styles: {
       padding: "8px",
     },
@@ -112,13 +114,28 @@ const variantStyles = {
     boxShadow: "none",
   },
   outline: {
-    backgroundColor: "transparent",
-    border: "1px solid blue",
-    color: "blue",
+    log: true,
+    backgroundColor: [
+      ["@toggled", "oklch(94% 0% 68deg)"],
+      [":active", "oklch(94% 0% 68deg)"],
+      [":hover", "oklch(97% 0% 68deg)"],
+      "transparent",
+    ],
+    border: "1px solid oklch(0.3867 0 0)",
+    color: [["@toggled&:hover", "oklch(35% 0% 0deg)"], "oklch(0% 0% 0deg)"],
+    overflow: "hidden",
+    borderRadius: "5px",
   },
   ghost: {
-    backgroundColor: [[":hover", "rgba(0, 0, 0, 0.1)"], "transparent"],
-    color: "currentColor",
+    backgroundColor: [
+      ["@toggled", "oklch(94% 0% 68deg)"],
+      [":active", "oklch(94% 0% 68deg)"],
+      [":hover", "oklch(97% 0% 68deg)"],
+      "transparent",
+    ],
+    overflow: "hidden",
+    borderRadius: "5px",
+    color: [["@toggled&:hover", "oklch(35% 0% 0deg)"], "oklch(0% 0% 0deg)"],
     border: "none",
     outline: "none",
     boxShadow: "none",
@@ -146,6 +163,7 @@ export default function Button(p: Props) {
       caretLeading: false,
       submit: false,
       align: "center",
+      togglable: false,
     } as const),
     ...(props as Constructor),
   };
@@ -164,7 +182,33 @@ export default function Button(p: Props) {
     isLoading: false,
   };
 
+  let isToggled = constructor.initToggled || false;
+  const [rToggleOnOff, setrToggleOnOff] = createSignal(isToggled);
+
   const api: Api = {
+    toggle: () => {
+      isToggled = !isToggled;
+      setrToggleOnOff(isToggled);
+      if (events.onToggle) {
+        events.onToggle(isToggled);
+      }
+    },
+    toggleOn: () => {
+      if (isToggled) return;
+      isToggled = true;
+      setrToggleOnOff(isToggled);
+      if (events.onToggle) {
+        events.onToggle(isToggled);
+      }
+    },
+    toggleOff: () => {
+      if (!isToggled) return;
+      isToggled = false;
+      setrToggleOnOff(isToggled);
+      if (events.onToggle) {
+        events.onToggle(isToggled);
+      }
+    },
     setDisabled: (s: boolean) => {
       state.isDisabled = s;
       setrIsDisabledState(s);
@@ -218,7 +262,7 @@ export default function Button(p: Props) {
 
   onMount(() => {
     if (constructor.ref) {
-      constructor.ref(rootElRef!);
+      constructor.ref(api);
     }
     setrMounted(true);
   });
@@ -274,6 +318,21 @@ export default function Button(p: Props) {
     );
   })();
 
+  const rootEvents = {
+    ...((constructor.togglable || events.onClick) && {
+      "on:click": (e: MouseEvent) => {
+        if (constructor.togglable) {
+          if (!props.preventToogleOnClick) {
+            api.toggle();
+          }
+        }
+        if (events.onClick) {
+          events.onClick(e);
+        }
+      },
+    }),
+  };
+
   const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
   return (
     <>
@@ -282,31 +341,31 @@ export default function Button(p: Props) {
         ref={(el: HTMLElement) => {
           rootElRef = el;
           const values = {
-              ...{
-                boxSizing: "border-box",
-                cursor: "pointer",
-                position: "relative",
-                display: "flex",
-                ...(buttonType !== ButtonType.Normal
-                  ? {
-                      justifyContent: "center",
-                      alignItems: constructor.align,
-                      flexDirection: "column",
-                    }
-                  : {
-                      justifyContent: constructor.align,
-                      alignItems: "center",
-                    }),
-                gap: "8px",
-                color: "currentColor",
-              },
-              ...typeStyles[buttonType][constructor.size],
-              ...typeStyles[buttonType].styles,
-              ...variantStyles[constructor.variant],
-              ...(stylexValue && typeof stylexValue === "function"
-                ? stylexValue()
-                : stylexValue),
-            };
+            ...{
+              boxSizing: "border-box",
+              cursor: "pointer",
+              position: "relative",
+              display: "flex",
+              ...(buttonType !== ButtonType.Normal
+                ? {
+                    justifyContent: "center",
+                    alignItems: constructor.align,
+                    flexDirection: "column",
+                  }
+                : {
+                    justifyContent: constructor.align,
+                    alignItems: "center",
+                  }),
+              gap: "8px",
+              color: "currentColor",
+            },
+            ...typeStyles[buttonType][constructor.size],
+            ...typeStyles[buttonType].styles,
+            ...variantStyles[constructor.variant],
+            ...(stylexValue && typeof stylexValue === "function"
+              ? stylexValue()
+              : stylexValue),
+          };
           stylex(el, () => ({
             ...{
               boxSizing: "border-box",
@@ -341,8 +400,11 @@ export default function Button(p: Props) {
           ...(rIsDisabledState() && { disabled: state.isDisabled }),
           ...(rIsLoadingState() && { "data-loading": "" }),
           ...attr,
+          ...(rToggleOnOff() && {
+            "data-stylex-toggled": "",
+          }),
         }}
-        on:click={events.onClick}
+        {...rootEvents}
         on:mousedown={events.onMouseDown}
       >
         {buttonType === ButtonType.Normal ? (

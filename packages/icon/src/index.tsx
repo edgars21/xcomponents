@@ -1,6 +1,6 @@
 import { Component, untrack } from "solid-js";
 import * as icons from "lucide-solid";
-import { stylex, type StyleXValidSolidType } from "@stylex/solid";
+import { stylex, type StyleXJs } from "@stylex/solid";
 import defaultLibrary from "./libraries/default";
 import { Dynamic } from "solid-js/web";
 
@@ -59,8 +59,12 @@ export type Constructor = {
   name: LibraryKeyUnion;
   size?: number;
   color?: string;
-  "pt:root"?: (() => StyleXValidSolidType) | StyleXValidSolidType;
+  "pt:root"?: ElementSetter;
 };
+interface ElementSetter {
+  attr?: Record<string, string>;
+  stylex?: (() => StyleXJs) | StyleXJs;
+}
 
 export default function Icon(p: Props) {
   const props = untrack(() => p);
@@ -99,7 +103,10 @@ export default function Icon(p: Props) {
     return (
       <Dynamic
         component="svg"
-        {...(attributes && attributes)}
+        {...{
+          ...(attributes && attributes),
+          ...(constructor["pt:root"]?.attr && constructor["pt:root"]?.attr),
+        }}
         width={constructor.size}
         height={constructor.size}
         color={constructor.color}
@@ -107,9 +114,10 @@ export default function Icon(p: Props) {
         ref={(el) => {
           stylex(el as unknown as HTMLElement, () => ({
             ...{
-            ...(constructor["pt:root"] && typeof constructor["pt:root"] === "function"
-                ? constructor["pt:root"]()
-                : constructor["pt:root"]),
+              ...(constructor["pt:root"]?.stylex &&
+                (typeof constructor["pt:root"].stylex === "function"
+                  ? constructor["pt:root"].stylex()
+                  : constructor["pt:root"]?.stylex)),
             },
           }));
         }}

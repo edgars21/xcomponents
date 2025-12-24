@@ -55,14 +55,20 @@ interface Slots {
 }
 
 type ApiBindings = ToAccessorsCfg<Api, true, true>;
-interface Api {
+export interface Api {
   setDisabled: (state: boolean) => void;
   setLoading: (state: boolean) => void;
+  toggle: () => void;
+  toggleOn: () => void;
+  toggleOff: () => void;
+  readonly isToggled: boolean;
 }
 
 interface Events {
   onClick?: (e: MouseEvent) => void;
   onMouseDown?: (e: MouseEvent) => void;
+  onMouseEnter?: (e: MouseEvent) => void;
+  onMouseLeave?: (e: MouseEvent) => void;
   onToggle?: (toggled: boolean) => void;
 }
 enum TagType {
@@ -114,7 +120,6 @@ const variantStyles = {
     boxShadow: "none",
   },
   outline: {
-    log: true,
     backgroundColor: [
       ["@toggled", "oklch(94% 0% 68deg)"],
       [":active", "oklch(94% 0% 68deg)"],
@@ -186,6 +191,9 @@ export default function Button(p: Props) {
   const [rToggleOnOff, setrToggleOnOff] = createSignal(isToggled);
 
   const api: Api = {
+    get isToggled() {
+      return isToggled;
+    },
     toggle: () => {
       isToggled = !isToggled;
       setrToggleOnOff(isToggled);
@@ -275,7 +283,15 @@ export default function Button(p: Props) {
     if (slots.startSlot) {
       inside = slots.startSlot;
     } else if (constructor.startIcon) {
-      inside = <Icon name={constructor.startIcon} />;
+      inside = (
+        <Icon
+          pt:root={{
+            flexShrink: "0",
+            flexGrow: "0",
+          }}
+          name={constructor.startIcon}
+        />
+      );
     } else if (caretJsx && props.caretLeading) {
       inside = caretJsx;
     }
@@ -329,6 +345,16 @@ export default function Button(p: Props) {
         if (events.onClick) {
           events.onClick(e);
         }
+      },
+    }),
+    ...(events.onMouseEnter && {
+      "on:mouseenter": (e: MouseEvent) => {
+        events.onMouseEnter(e);
+      },
+    }),
+    ...(events.onMouseLeave && {
+      "on:mouseleave": (e: MouseEvent) => {
+        events.onMouseLeave(e);
       },
     }),
   };
@@ -429,30 +455,31 @@ export default function Button(p: Props) {
           </>
         ) : (
           <>
-            <div
-              use:stylex={{
-                display: "grid",
-                placeItems: "center",
-                gridAutoFlow: "row",
-                opacity: ["", [rIsLoadingState(), "0.3"]],
-              }}
-            >
-              {(() => {
-                if (constructor.icon === true) {
-                  return slots.labelSlot;
-                } else {
-                  return (
-                    <Icon
-                      {...{
-                        name: constructor.icon!,
-                        ...(constructor["pt:icon"] && constructor["pt:icon"]),
-                      }}
-                    />
-                  );
-                }
-              })()}
+            {(() => {
+              if (constructor.icon === true) {
+                return slots.labelSlot;
+              } else {
+                return (
+                  <Icon
+                    {...(constructor["pt:icon"] && constructor["pt:icon"])}
+                    pt:root={{
+                      stylex: {
+                        ...{
+                          flexGrow: "0",
+                          flexShrink: "0",
+                        },
+                        ...(constructor["pt:icon"]?.["pt:root"] &&
+                          constructor["pt:icon"]?.["pt:root"]),
+                      },
+                    }}
+                    name={constructor.icon!}
+                  />
+                );
+              }
+            })()}
+            {buttonType === ButtonType.IconLabel && (
               <span>{slots.labelSlot}</span>
-            </div>
+            )}
             {rIsLoadingState() && (
               <ProgressCircle
                 stylex={{

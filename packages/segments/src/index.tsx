@@ -32,6 +32,7 @@ export interface Constructor {
   items: Item[];
   variant?: "segment" | "tab";
   "pt:root"?: ElementSetter;
+  "pt:segment"?: ElementSetter;
 }
 
 interface ElementSetter {
@@ -40,7 +41,7 @@ interface ElementSetter {
 }
 
 interface Events {
-  onAction?: () => void;
+  onChange?: (value: ItemValue["value"]) => void;
 }
 
 interface Api {
@@ -54,7 +55,6 @@ export default function Menu(p: Props) {
 
   const constructor = {
     ...({
-      align: "start",
       variant: "segment",
     } as const),
     ...(props as Constructor),
@@ -79,17 +79,14 @@ export default function Menu(p: Props) {
       selected.add(item);
       setRSelected([...selected].map((s) => s.value));
       item.api.toggleOn();
-      if (events.onAction) {
-        events.onAction();
+      if (events.onChange) {
+        events.onChange([...selected][0]?.value);
       }
     },
     unselect: (item: Item) => {
       selected.delete(item);
       item.api.toggleOff();
       setRSelected([...selected].map((s) => s.value));
-      if (events.onAction) {
-        events.onAction();
-      }
     },
   };
 
@@ -105,6 +102,7 @@ export default function Menu(p: Props) {
         }
       : {
           padding: "4px 4px",
+          gap: "4px",
           display: "flex",
           flexWrap: "nowrap",
           backgroundColor: "#fff",
@@ -120,6 +118,7 @@ export default function Menu(p: Props) {
       {...(attr || {})}
       use:stylex={{
         ...{
+          boxSizing: "border-box",
           ...rootStyles,
         },
         ...(stylexValue && typeof stylexValue === "function"
@@ -137,27 +136,21 @@ export default function Menu(p: Props) {
                 api.unselect(previous);
               }
               api.select(item);
-            } else {
-              console.log("alredy selected");
             }
           };
 
           const rIsSelected = createMemo(() => {
-            console.log("rSelected(): ", rSelected());
             return rSelected().includes(value);
           });
-          console.log("rIsSelected: ", rIsSelected());
 
           return (
             <Button
               ref={(api) => {
                 item.api = api;
               }}
-              align={constructor.align}
               variant="outline"
               togglable
               onToggle={(toggled) => {
-                console.log("toggled: ", toggled);
               }}
               pt:root={{
                 stylex: () => ({
@@ -165,7 +158,6 @@ export default function Menu(p: Props) {
                     // @ts-ignore
                     position: "relative",
                     border: "none",
-                    width: "100%",
                     pointerEvents: [[rIsSelected(), "none"], "auto"],
                   },
                   ...(constructor.variant === "tab" && {
@@ -176,6 +168,12 @@ export default function Menu(p: Props) {
                       "transparent",
                     ],
                   }),
+                  ...{
+                    ...(constructor["pt:segment"]?.stylex &&
+                      (typeof constructor["pt:segment"].stylex === "function"
+                        ? constructor["pt:segment"].stylex()
+                        : constructor["pt:segment"]?.stylex)),
+                  },
                 }),
               }}
               preventToogleOnClick

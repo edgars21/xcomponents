@@ -21,6 +21,8 @@ export interface Constructor {
   anchor: HTMLElement | JSX.Element;
   placement?: PopperConstructor["placement"];
   trigger?: PopperConstructor["trigger"];
+  strategy?: PopperConstructor["strategy"];
+  teleportTo?: PopperConstructor["teleportTo"];
   closeOnMenuAction?: boolean;
   closeOnInsideClick?: boolean;
   sameWidth?: boolean;
@@ -131,6 +133,8 @@ export default function Dropdown(p: Props) {
         anchor={anchor}
         placement={constructor.placement}
         trigger={constructor.trigger}
+        strategy={constructor.strategy}
+        teleportTo={constructor.teleportTo}
         {...{
           ...(events.onClick && {
             onClick: (e: Event) => {

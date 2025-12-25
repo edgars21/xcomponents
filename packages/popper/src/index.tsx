@@ -21,12 +21,16 @@ import {
   type Placement as FloatingUIPlacement,
   type MiddlewareData,
   type OffsetOptions,
+  type Strategy,
 } from "@floating-ui/dom";
 import { stylex, type StyleXJs } from "@stylex/solid";
 import {
   createEventListenerWithCleanupFactory,
   type ToAccessorsCfg,
 } from "@xcomponents/shared";
+
+import { Portal } from "solid-js/web";
+
 false && stylex;
 
 export type Props = Constructor & {
@@ -48,6 +52,8 @@ export interface Constructor {
     | false;
   "pt:root"?: ElementSetter;
   sameWidth?: boolean;
+  strategy?: Strategy;
+  teleportTo?: HTMLElement;
 }
 interface ElementSetter {
   attr?: Record<string, string>;
@@ -87,6 +93,7 @@ export default function Popper(p: Props) {
       trigger: "manual",
       autoUpdate: false,
       sameWidth: false,
+      strategy: "fixed",
     } as const),
     ...(props as Constructor),
   };
@@ -238,95 +245,112 @@ export default function Popper(p: Props) {
         }>();
 
         return (
-          <div
-            {...(attr || {})}
-            ref={async (el) => {
-              rootEl = el;
-              const update = async () => {
-                const { x, y, placement, middlewareData } =
-                  await computePosition(constructor.anchor, rootEl, {
-                    strategy: "fixed",
-                    placement: constructor.placement,
-                    middleware: [
-                      ...(constructor?.middlewares === false
-                        ? []
-                        : [
-                            ...(constructor?.middlewares?.offset === false
-                              ? []
-                              : [
-                                  offset(constructor?.middlewares?.offset ?? 6),
-                                ]),
-                            // flip(),
-                            shift({ crossAxis: true, padding: 3 }),
-                          ]),
-                      ...(constructor.arrow
-                        ? [arrow({ element: arrowEl! })]
-                        : []),
-                    ],
-                  });
-                stylex(rootEl!, () => ({
-                  top: `${y}px`,
-                  left: `${x}px`,
-                  visibility: "visible",
-                }));
-                if (middlewareData.arrow) {
-                  setrArrowPos({
-                    x: middlewareData.arrow.x || 0,
-                    y: middlewareData.arrow.y || 0,
-                  });
-                }
-              };
-              if (constructor.autoUpdate) {
-                const cleanup = autoUpdate(constructor.anchor, rootEl, update);
-              } else {
-                update();
-              }
-            }}
-            use:stylex={{
-              ...{
-                ...rootStyles,
-                position: "fixed",
-                zIndex: "9999",
-                visibility: "hidden",
-                top: 0,
-                left: 0,
-                ...(constructor.sameWidth && {
-                  width: `${constructor.anchor.offsetWidth}px`,
-                }),
-              },
-            }}
-            {...{
-              ...(events.onClick && {
-                "on:click": (e: Event) => {
-                  events.onClick!(e);
-                },
-              }),
-            }}
+          <OptionalWrapper
+            when={constructor.teleportTo instanceof HTMLElement}
+            wrap={(children) => (
+              <Portal mount={constructor.teleportTo}>{children}</Portal>
+            )}
           >
-            {constructor.arrow ? (
-              <div
-                ref={arrowEl}
-                use:stylex={{
-                  ...{
-                    ...arrowStyles,
-                    boxSizing: "border-box",
-                    width: "6px",
-                    height: "6px",
-                    position: "absolute",
-                    top: (rArrowPos()?.y || 0) + "px",
-                    left: (rArrowPos()?.x || 0) + "px",
-                    transform: "rotate(45deg)",
-                    [staticSide]: "-3px",
+            <div
+              {...(attr || {})}
+              ref={async (el) => {
+                rootEl = el;
+                const update = async () => {
+                  const { x, y, placement, middlewareData } =
+                    await computePosition(constructor.anchor, rootEl, {
+                      strategy: constructor.strategy,
+                      placement: constructor.placement,
+                      middleware: [
+                        ...(constructor?.middlewares === false
+                          ? []
+                          : [
+                              ...(constructor?.middlewares?.offset === false
+                                ? []
+                                : [
+                                    offset(
+                                      constructor?.middlewares?.offset ?? 6
+                                    ),
+                                  ]),
+                              // flip(),
+                              shift({ crossAxis: true, padding: 3 }),
+                            ]),
+                        ...(constructor.arrow
+                          ? [arrow({ element: arrowEl! })]
+                          : []),
+                      ],
+                    });
+                  stylex(rootEl!, () => ({
+                    top: `${y}px`,
+                    left: `${x}px`,
+                    visibility: "visible",
+                  }));
+                  if (middlewareData.arrow) {
+                    setrArrowPos({
+                      x: middlewareData.arrow.x || 0,
+                      y: middlewareData.arrow.y || 0,
+                    });
+                  }
+                };
+                if (constructor.autoUpdate) {
+                  const cleanup = autoUpdate(
+                    constructor.anchor,
+                    rootEl,
+                    update
+                  );
+                } else {
+                  update();
+                }
+              }}
+              use:stylex={{
+                ...{
+                  ...rootStyles,
+                  position: constructor.strategy,
+                  zIndex: "9999",
+                  visibility: "hidden",
+                  top: 0,
+                  left: 0,
+                  ...(constructor.sameWidth && {
+                    width: `${constructor.anchor.offsetWidth}px`,
+                  }),
+                },
+              }}
+              {...{
+                ...(events.onClick && {
+                  "on:click": (e: Event) => {
+                    events.onClick!(e);
                   },
-                }}
-              ></div>
-            ) : null}
-            <span>{slots.defaultSlot}</span>
-          </div>
+                }),
+              }}
+            >
+              {constructor.arrow ? (
+                <div
+                  ref={arrowEl}
+                  use:stylex={{
+                    ...{
+                      ...arrowStyles,
+                      boxSizing: "border-box",
+                      width: "6px",
+                      height: "6px",
+                      position: "absolute",
+                      top: (rArrowPos()?.y || 0) + "px",
+                      left: (rArrowPos()?.x || 0) + "px",
+                      transform: "rotate(45deg)",
+                      [staticSide]: "-3px",
+                    },
+                  }}
+                ></div>
+              ) : null}
+              <span>{slots.defaultSlot}</span>
+            </div>
+          </OptionalWrapper>
         );
       })()}
     </Show>
   );
+}
+
+function OptionalWrapper(props) {
+  return props.when ? props.wrap(props.children) : props.children;
 }
 
 type Side = "top" | "right" | "bottom" | "left";

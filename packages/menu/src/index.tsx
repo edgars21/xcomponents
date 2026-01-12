@@ -12,7 +12,13 @@ false && stylex;
 export type Props = Constructor & Events;
 
 type Item = ItemValue & ButtonProps;
-type ItemValue = { value: string; label: string, onAction?: () => void };
+type ItemValue = {
+  value: string;
+  label: string;
+  onAction?: () => void;
+  onHover?: () => void;
+  onHoverLeave?: () => void;
+};
 export interface Constructor {
   items: Item[];
   align?: "start" | "center" | "end";
@@ -45,7 +51,7 @@ export default function Menu(p: Props) {
     } as const),
     ...(props as Constructor),
   };
-  
+
   const events = { ...props } as Events;
 
   const hasStartAdornment = !!props.items.find(
@@ -134,7 +140,6 @@ export default function Menu(p: Props) {
               align={constructor.align}
               variant="ghost"
               {...(rSelected().includes(item.value) && {
-
                 "should-be-here": true,
               })}
               pt:root={{
@@ -151,6 +156,12 @@ export default function Menu(p: Props) {
               }}
               {...buttonProps}
               {...(startSpaceAdornment && { startSlot: startSpaceAdornment })}
+              {...(item.onHover && {
+                onMouseEnter: item.onHover,
+              })}
+              {...(item.onHoverLeave && {
+                onMouseLeave: item.onHoverLeave,
+              })}
             >
               {label}
             </Button>

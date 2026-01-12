@@ -12,7 +12,7 @@ import { Dynamic } from "solid-js/web";
 import { stylex, type StyleXJs } from "@stylex/solid";
 import ProgressCircle from "@xcomponents/progress-circle";
 import Icon, { type Props as IconProps } from "@xcomponents/icon";
-import Tooltip from "@xcomponents/tooltip";
+import Tooltip, { type Props as ToolltipProps } from "@xcomponents/tooltip";
 import Dropdown, { type Props as DropdownProps } from "@xcomponents/dropdown";
 import { type ToAccessorsCfg } from "@xcomponents/shared";
 false && stylex;
@@ -39,6 +39,7 @@ type Constructor = {
   "pt:label"?: ElementSetter;
   "pt:icon"?: Partial<IconProps>;
   dropdown?: Omit<DropdownProps, "anchor">;
+  tooltip?: JSX.Element | string | ToolltipProps;
 };
 
 interface ElementSetter {
@@ -51,7 +52,6 @@ interface Slots {
   labelSlot?: JSX.Element | string;
   startSlot?: JSX.Element;
   endSlot?: JSX.Element;
-  tooltipSlot?: JSX.Element | string;
 }
 
 type ApiBindings = ToAccessorsCfg<Api, true, true>;
@@ -266,7 +266,7 @@ export default function Button(p: Props) {
 
   const [rMounted, setrMounted] = createSignal(false);
 
-  const haveTooltip = !!slots.tooltipSlot;
+  const haveTooltip = !!constructor.tooltip;
 
   onMount(() => {
     if (constructor.ref) {
@@ -497,7 +497,22 @@ export default function Button(p: Props) {
       {haveTooltip && (
         <>
           <Show when={rMounted()}>
-            <Tooltip anchor={rootElRef!} tooltipSlot={slots.tooltipSlot} />
+            {(() => {
+              const isProps =
+                typeof constructor.tooltip === "object" &&
+                "tooltipSlot" in constructor.tooltip;
+              return isProps ? (
+                <Tooltip
+                  anchor={rootElRef!}
+                  {...constructor.tooltip}
+                />
+              ) : (
+                <Tooltip
+                  anchor={rootElRef!}
+                  tooltipSlot={constructor.tooltip}
+                />
+              );
+            })()}
           </Show>
         </>
       )}

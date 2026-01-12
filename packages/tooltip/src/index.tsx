@@ -77,7 +77,7 @@ export default function Tooltip(p: Props) {
         placement={constructor.placement}
         arrow={constructor.arrow}
         trigger={constructor.trigger}
-        setOpen={apiBindings.setOpen}
+        // setOpen={apiBindings.setOpen}
       >
         {slots.tooltipSlot}
       </Popper>

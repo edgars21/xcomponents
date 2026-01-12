@@ -39,7 +39,7 @@ export type Props = Constructor & {
   Events;
 
 export interface Constructor {
-  ref: (api: Api) => void;
+  ref?: (api: Api) => void;
   anchor: HTMLElement;
   placement?: FloatingUIPlacement;
   arrow?: boolean;

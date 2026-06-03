@@ -6,6 +6,7 @@ import {
   For,
   createSignal,
   createMemo,
+  onMount,
 } from "solid-js";
 import Popper, {
   type Constructor as PopperConstructor,
@@ -26,8 +27,10 @@ type ItemValue = {
   value: string;
   label: string;
   onAction?: () => void;
+  onMouseenter?: () => void;
 };
 export interface Constructor {
+  ref?: (api: Api) => void;
   initValue: string;
   items: Item[];
   variant?: "segment" | "tab";
@@ -44,7 +47,7 @@ interface Events {
   onChange?: (value: ItemValue["value"]) => void;
 }
 
-interface Api {
+export interface Api {
   readonly selected: ItemValue[];
   select: (item: ItemValue) => void;
   unselect: (item: ItemValue) => void;
@@ -76,17 +79,25 @@ export default function Menu(p: Props) {
       return [...selected].map((s) => ({ value: s.value, label: s.label }));
     },
     select: (item: Item) => {
-      selected.add(item);
-      setRSelected([...selected].map((s) => s.value));
-      item.api.toggleOn();
-      if (events.onChange) {
-        events.onChange([...selected][0]?.value);
+      if (!selected.has(item)) {
+        const previous = [...selected][0];
+        if (previous) {
+          api.unselect(previous);
+        }
+        selected.add(item);
+        setRSelected([...selected].map((s) => s.value));
+        item.api.toggleOn();
+        if (events.onChange) {
+          events.onChange([...selected][0]?.value);
+        }
       }
     },
     unselect: (item: Item) => {
-      selected.delete(item);
-      item.api.toggleOff();
-      setRSelected([...selected].map((s) => s.value));
+      if (selected.has(item)) {
+        selected.delete(item);
+        item.api.toggleOff();
+        setRSelected([...selected].map((s) => s.value));
+      }
     },
   };
 
@@ -113,6 +124,13 @@ export default function Menu(p: Props) {
         };
 
   const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
+
+  onMount(() => {
+    if (constructor.ref) {
+      constructor.ref(api);
+    }
+  });
+
   return (
     <div
       {...(attr || {})}
@@ -128,7 +146,7 @@ export default function Menu(p: Props) {
     >
       <For each={items}>
         {(item) => {
-          const { value, label, ...buttonProps } = item;
+          const { value, label, ref, ...buttonProps } = item;
           buttonProps.onClick = (e: MouseEvent) => {
             if (!selected.has(item)) {
               const previous = [...selected][0];
@@ -147,11 +165,13 @@ export default function Menu(p: Props) {
             <Button
               ref={(api) => {
                 item.api = api;
+                if (ref) {
+                  ref.call(item, api);
+                }
               }}
               variant="outline"
               togglable
-              onToggle={(toggled) => {
-              }}
+              onToggle={(toggled) => {}}
               pt:root={{
                 stylex: () => ({
                   ...{

@@ -1,8 +1,9 @@
-import { Component, untrack } from "solid-js";
+import { Component, untrack, createEffect } from "solid-js";
 import * as icons from "lucide-solid";
 import { stylex, type StyleXJs } from "@stylex/solid";
 import defaultLibrary from "./libraries/default";
 import { Dynamic } from "solid-js/web";
+import { create } from "lodash";
 
 const libraries = {
   default: defaultLibrary,
@@ -20,7 +21,7 @@ export function IconConfig(config: {
 }) {
   if (config.libraries) {
     Object.entries(
-      config.libraries as Record<string, Record<string, string>>
+      config.libraries as Record<string, Record<string, string>>,
     ).forEach(([library, value]) => {
       let existing =
         (libraries as Record<string, Record<string, string>>)[library] ||
@@ -79,7 +80,7 @@ export default function Icon(p: Props) {
 
   const [libraryKeyOrIconKey, iconKey] = props.name.split(":") as [
     string,
-    string | undefined
+    string | undefined,
   ];
   let icon: string;
   if (!iconKey) {
@@ -129,7 +130,7 @@ export default function Icon(p: Props) {
 }
 
 function parseSvg(
-  icon: string
+  icon: string,
 ): { attributes: Record<string, string | boolean>; innerSvg: string } | null {
   const match = icon.match(/<svg\b([^>]*)>([\s\S]*?)<\/svg>/i);
   if (!match) return null;

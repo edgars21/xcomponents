@@ -56,6 +56,7 @@ interface Slots {
 
 type ApiBindings = ToAccessorsCfg<Api, true, true>;
 export interface Api {
+  element: HTMLElement;
   setDisabled: (state: boolean) => void;
   setLoading: (state: boolean) => void;
   toggle: () => void;
@@ -191,6 +192,9 @@ export default function Button(p: Props) {
   const [rToggleOnOff, setrToggleOnOff] = createSignal(isToggled);
 
   const api: Api = {
+    get element() {
+      return rootElRef;
+    },
     get isToggled() {
       return isToggled;
     },
@@ -232,7 +236,7 @@ export default function Button(p: Props) {
       api.setDisabled(
         typeof apiBindings.setDisabled === "function"
           ? apiBindings.setDisabled()
-          : apiBindings.setDisabled || false
+          : apiBindings.setDisabled || false,
       );
     });
   }
@@ -242,13 +246,13 @@ export default function Button(p: Props) {
       api.setLoading(
         typeof apiBindings.setLoading === "function"
           ? apiBindings.setLoading()
-          : apiBindings.setLoading || false
+          : apiBindings.setLoading || false,
       );
     });
   }
 
   const [rIsDisabledState, setrIsDisabledState] = createSignal(
-    state.isDisabled
+    state.isDisabled,
   );
   const [rIsLoadingState, setrIsLoadingState] = createSignal(state.isLoading);
 
@@ -461,16 +465,20 @@ export default function Button(p: Props) {
               } else {
                 return (
                   <Icon
-                    {...(constructor["pt:icon"] && constructor["pt:icon"])}
+                    {...(constructor["pt:icon"]?.["pt:root"]?.attr &&
+                      constructor["pt:icon"]?.["pt:root"]?.attr)}
                     pt:root={{
-                      stylex: {
+                      stylex: () => ({
                         ...{
                           flexGrow: "0",
                           flexShrink: "0",
                         },
-                        ...(constructor["pt:icon"]?.["pt:root"] &&
-                          constructor["pt:icon"]?.["pt:root"]),
-                      },
+                        ...(constructor["pt:icon"]?.["pt:root"]?.stylex &&
+                          (typeof constructor["pt:icon"]?.["pt:root"]
+                            ?.stylex === "function"
+                            ? constructor["pt:icon"]?.["pt:root"]?.stylex()
+                            : constructor["pt:icon"]?.["pt:root"]?.stylex)),
+                      }),
                     }}
                     name={constructor.icon!}
                   />
@@ -502,10 +510,7 @@ export default function Button(p: Props) {
                 typeof constructor.tooltip === "object" &&
                 "tooltipSlot" in constructor.tooltip;
               return isProps ? (
-                <Tooltip
-                  anchor={rootElRef!}
-                  {...constructor.tooltip}
-                />
+                <Tooltip anchor={rootElRef!} {...constructor.tooltip} />
               ) : (
                 <Tooltip
                   anchor={rootElRef!}

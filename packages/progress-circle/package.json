@@ -1,5 +1,5 @@
 {
-  "name": "@xcomponents2/button",
+  "name": "@xcomponents2/progress-circle",
   "version": "0.1.0",
   "license": "MIT",
   "author": "Edgars Snepsts",
@@ -11,10 +11,7 @@
     "cdn/**/*"
   ],
   "dependencies": {
-    "@stylex/solid": "file:../../../13.18_v3-stylex/packages/solid/",
-    "@xcomponents2/progress-circle": "^0.1.0",
-    "@xcomponents2/icon": "^0.1.0",
-    "@xcomponents2/shared": "^0.1.0"
+    "@stylex/solid": "file:../../../13.18_v3-stylex/packages/solid/"
   },
   "devDependencies": {
     "esbuild-plugin-solid": "^0.6.0",

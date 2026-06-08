@@ -1,24 +1,25 @@
 {
-  "name": "@xcomponents2/icon",
+  "name": "@xcomponents2/text-input",
   "version": "0.1.0",
   "license": "MIT",
   "author": "Edgars Snepsts",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js",
-    "./lucide-library": "./dist/libraries/lucide/index.js"
-  },
   "files": [
     "dist/**/*",
     "cdn/**/*"
   ],
+  "dependencies": {
+    "@stylex/solid": "file:../../../13.18_v3-stylex/packages/solid/",
+    "@xcomponents2/progress-circle": "^0.1.0",
+    "@xcomponents2/icon": "^0.1.0",
+    "@xcomponents2/shared": "^0.1.0"
+  },
   "devDependencies": {
-    "@types/lodash": "^4.17.20",
-    "@types/node": "^24.8.1",
     "esbuild-plugin-solid": "^0.6.0",
     "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
     "typescript": "^5.4.5"
   },
   "scripts": {
@@ -27,11 +28,5 @@
   },
   "peerDependencies": {
     "solid-js": "^1.9.9"
-  },
-  "dependencies": {
-    "@stylex/solid": "file:../../../13.18_v3-stylex/packages/solid/",
-    "lodash": "^4.17.21",
-    "lucide-solid": "^0.544.0",
-    "lucide-static": "^0.546.0"
   }
 }

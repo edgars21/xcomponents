@@ -19,6 +19,7 @@ function toKebabKeys<T extends Record<string, unknown>>(obj: T): KebabKeys<T> {
   return out as KebabKeys<T>;
 }
 
-export const icons = toKebabKeys(allIcons);
+export const lucideLibrary = toKebabKeys(allIcons);
 
 export * from "lucide-static";
+

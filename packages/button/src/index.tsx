@@ -1,146 +1,114 @@
-import { splitProps, JSX, onMount, createSignal, Show } from "solid-js";
+import {
+  splitProps,
+  type JSX,
+  onMount,
+  createSignal,
+  Show,
+  Component,
+} from "solid-js";
 import { Dynamic } from "solid-js/web";
 import Icon, { type Props as IconProps } from "@xcomponents2/icon";
 import ProgressCircle from "@xcomponents2/progress-circle";
-import { stylex, } from "@stylex/solid";
+import {
+  stylex,
+  type StylexDefinition,
+  mergeStylexDefinitions,
+} from "@stylex/solid";
 false && stylex;
 
-type KeysOfUnion<T> = T extends T ? keyof T : never;
+declare module "solid-js" {
+  namespace JSX {
+    interface Directives {
+      stylex: StylexDefinition;
+    }
+  }
+}
 
-type ConstructorNormal = {
-  label: string;
+export type ButtonProps = Constructor &
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>;
+
+type Constructor = {
+  placeholder?: string;
+  value?: string | number;
+  type?:
+    | "text"
+    | {
+        kind: "text";
+        minlength?: number;
+        maxlength?: number;
+        pattern?: string;
+      }
+    | "password"
+    | {
+        kind: "password";
+        minlength?: number;
+        maxlength?: number;
+        pattern?: string;
+      }
+    | "number"
+    | {
+        kind: "password";
+        min?: number;
+        max?: number;
+        step?: string;
+      };
+  ref?: (api: Api) => void;
+  startSlot?: JSX.Element;
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"];
+  endSlot?: JSX.Element;
+  label: string | JSX.Element;
+  "pt:root"?: StylexDefinition;
+  "pt:container"?: StylexDefinition;
+  "pt:label"?: StylexDefinition;
 };
 
-type ConstructorWrap = {
-  children: JSX.Element;
-};
-
-type ConstructorIcon = {
-  icon: IconProps["name"];
-};
-
-type ConstructorIconWrap = {
-  icon: true;
-  children: JSX.Element;
-};
-
-type SharedConstructor<
-  E extends Record<string, any>,
-  T extends HTMLButtonElement | HTMLAnchorElement = HTMLButtonElement,
-> = {
-  ref?: (api: Api<T>) => void;
-  "pt:root"?: any;
-} & (T extends HTMLAnchorElement
-  ? JSX.AnchorHTMLAttributes<HTMLAnchorElement>
-  : JSX.ButtonHTMLAttributes<HTMLButtonElement>) &
-  E;
-
-export interface PropsOverloads {
-  (props: PropsNormalOverload): JSX.Element;
-  (props: PropsWrapOverload): JSX.Element;
-  (props: PropsIconOverload): JSX.Element;
-  (props: PropsIconWrapOverload): JSX.Element;
-  (props: PropsNormalAnchorOverload): JSX.Element;
-  (props: PropsWrapAnchorOverload): JSX.Element;
-  (props: PropsIconAnchorOverload): JSX.Element;
-  (props: PropsIconWrapAnchorOverload): JSX.Element;
-}
-
-export type Props =
-  | PropsNormalOverload
-  | PropsWrapOverload
-  | PropsIconOverload
-  | PropsIconWrapOverload
-  | PropsNormalAnchorOverload
-  | PropsWrapAnchorOverload
-  | PropsIconAnchorOverload
-  | PropsIconWrapAnchorOverload;
-
-type PropsNormalOverload = SharedConstructor<ConstructorNormal>;
-type PropsWrapOverload = SharedConstructor<ConstructorWrap>;
-type PropsIconOverload = SharedConstructor<ConstructorIcon>;
-type PropsIconWrapOverload = SharedConstructor<ConstructorIconWrap>;
-type PropsNormalAnchorOverload = SharedConstructor<
-  ConstructorNormal,
-  HTMLAnchorElement
->;
-type PropsWrapAnchorOverload = SharedConstructor<
-  ConstructorWrap,
-  HTMLAnchorElement
->;
-type PropsIconAnchorOverload = SharedConstructor<
-  ConstructorIcon,
-  HTMLAnchorElement
->;
-type PropsIconWrapAnchorOverload = SharedConstructor<
-  ConstructorIconWrap,
-  HTMLAnchorElement
->;
-
-enum TagType {
-  Button = "button",
-  Link = "a",
-}
-export interface Api<
-  T extends HTMLButtonElement | HTMLAnchorElement = HTMLButtonElement,
-> {
-  "pt:root": T;
+export interface Api {
+  element: HTMLButtonElement;
   setDisabled: (state: boolean) => void;
   setLoading: (state: boolean) => void;
   isDisabled: boolean;
   isLoading: boolean;
 }
 
-enum ButtonType {
-  Normal = "normal",
-  Wrap = "wrap",
-  Icon = "icon",
-  IconWrap = "icon-wrap",
+enum TagType {
+  Button = "button",
+  Link = "a",
 }
 
-export const Button = ((props: Props): JSX.Element => {
-  let rootElement: HTMLButtonElement | HTMLAnchorElement;
-
-  const constructor =
-    "icon" in props
-      ? props.icon === true
-        ? ({ kind: ButtonType.IconWrap, ...props } as {
-            kind: ButtonType.IconWrap;
-          } & SharedConstructor<ConstructorIconWrap>)
-        : ({ kind: ButtonType.Icon, ...props } as {
-            kind: ButtonType.Icon;
-          } & SharedConstructor<ConstructorIcon>)
-      : props.children
-        ? ({ kind: ButtonType.Wrap, ...props } as {
-            kind: ButtonType.Wrap;
-          } & SharedConstructor<ConstructorWrap>)
-        : ({ kind: ButtonType.Normal, ...props } as {
-            kind: ButtonType.Normal;
-          } & SharedConstructor<ConstructorNormal>);
+export function Button(props: ButtonProps): JSX.Element {
+  let rootElement: HTMLButtonElement;
 
   // @ts-ignore
   const elementTagType = props.href ? TagType.Link : TagType.Button;
 
   onMount(() => {});
 
-  const [_, rest] = splitProps(props, [
-    "label",
-    "startIcon",
-    "endIcon",
-    "children",
-    "icon",
-  ] as any);
+  const [constructor, buttonElemetnAttributesAdnEventListeners] = splitProps(
+    props,
+    [
+      "ref",
+      "label",
+      "startSlot",
+      "startIcon",
+      "endIcon",
+      "endSlot",
+      "pt:root",
+      "pt:container",
+      "pt:label",
+    ],
+  );
 
+  let value: string | number | null = null;
   let loading = false;
   let disabled = false;
 
   const [rLoadinState, setrLoadinState] = createSignal(loading);
   const [rDisabledState, setrDisabledState] = createSignal(loading);
+  const [rValueState, setrValueState] = createSignal(value);
 
-  const api: Api<typeof rootElement> = {
-    get "pt:root"() {
+  const api: Api = {
+    get element() {
       return rootElement!;
     },
     setDisabled(state) {
@@ -163,14 +131,20 @@ export const Button = ((props: Props): JSX.Element => {
     // @ts-ignore
     <Dynamic
       component={elementTagType}
-      {...rest}
-      ref={(ref: HTMLButtonElement | HTMLAnchorElement) => {
+      {...buttonElemetnAttributesAdnEventListeners}
+      ref={(ref: HTMLButtonElement) => {
         rootElement = ref;
-        stylex(ref, () => (constructor["pt:root"] ? constructor["pt:root"] : {
-          height: "28px",
-          padding: "0 6px",
-          boxSizing: "border-box",
-        }));
+        stylex(ref, () =>
+          // @ts-ignore
+          constructor["pt:root"]
+            ? // @ts-ignore
+              constructor["pt:root"]
+            : {
+                height: "28px",
+                padding: "0 6px",
+                boxSizing: "border-box",
+              },
+        );
         // @ts-ignore
         constructor.ref?.(api);
       }}
@@ -180,7 +154,6 @@ export const Button = ((props: Props): JSX.Element => {
       }}
     >
       <div
-        // @ts-ignore
         use:stylex={{
           height: "100%",
           position: "relative",
@@ -189,26 +162,28 @@ export const Button = ((props: Props): JSX.Element => {
           gap: "4px",
         }}
       >
-        {(() => {
-          switch (constructor.kind) {
-            case ButtonType.Normal:
-              return (
-                <>
-                  {constructor.startIcon && (
-                    <Icon name={constructor.startIcon} />
-                  )}
-                  {constructor.label}
-                  {constructor.endIcon && <Icon name={constructor.endIcon} />}
-                </>
-              );
-            case ButtonType.Wrap:
-              return constructor.children;
-            case ButtonType.Icon:
-              return <Icon name={constructor.icon} />;
-            case ButtonType.IconWrap:
-              return constructor.children;
+        <div
+          use:stylex={{
+            height: "100%",
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+          }}
+        ></div>
+        {constructor.startSlot}
+        {constructor.startIcon && <Icon name={constructor.startIcon} />}
+        <div
+          use:stylex={
+            constructor["pt:label"]
+              ? (constructor["pt:label"] as StylexDefinition)
+              : { border: "1px solid red" }
           }
-        })()}
+        >
+          {constructor.label}
+        </div>
+        {constructor.endIcon && <Icon name={constructor.endIcon} />}
+        {constructor.endSlot}
         <Show when={rLoadinState()}>
           <ProgressCircle
             stylex={{
@@ -223,4 +198,111 @@ export const Button = ((props: Props): JSX.Element => {
       </div>
     </Dynamic>
   );
-}) as PropsOverloads;
+}
+
+export type IconButtonProps = IconButtonConstructor &
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>;
+
+type IconButtonConstructor = {
+  ref?: (api: Api) => void;
+  icon: IconProps["name"] | IconProps;
+  "pt:root"?: StylexDefinition;
+  "pt:container"?: StylexDefinition;
+};
+
+export function IconButton(props: IconButtonProps): JSX.Element {
+  let rootElement: HTMLButtonElement;
+
+  onMount(() => {});
+
+  const [constructor, buttonElemetnAttributesAdnEventListeners] = splitProps(
+    props,
+    ["ref", "icon", "pt:root", "pt:container"],
+  );
+
+  let loading = false;
+  let disabled = false;
+
+  const [rLoadinState, setrLoadinState] = createSignal(loading);
+  const [rDisabledState, setrDisabledState] = createSignal(loading);
+
+  const api: Api = {
+    get element() {
+      return rootElement!;
+    },
+    setDisabled(state) {
+      disabled = state;
+      setrDisabledState(state);
+    },
+    setLoading(state) {
+      loading = state;
+      setrLoadinState(state);
+    },
+    get isDisabled() {
+      return disabled;
+    },
+    get isLoading() {
+      return loading;
+    },
+  };
+
+  onMount(() => {
+    // @ts-ignore
+    constructor.ref?.(api);
+  });
+
+  if (constructor["pt:root"]) {
+    mergeStylexDefinitions(
+      {
+        width: "20px",
+        height: "20px",
+        boxSizing: "border-box",
+        padding: "0",
+      },
+      constructor["pt:root"] as StylexDefinition,
+    );
+  }
+
+  return (
+    // @ts-ignore
+    <button
+      {...buttonElemetnAttributesAdnEventListeners}
+      ref={rootElement!}
+      use:stylex={mergeStylexDefinitions({
+        width: "20px",
+        height: "20px",
+        boxSizing: "border-box",
+        padding: "0",
+        border: "1px solid gray",
+      }, constructor["pt:root"])}
+      {...{
+        ...(rDisabledState() && { disabled: true }),
+        ...(rLoadinState() && { loading: true }),
+      }}
+    >
+      <div
+        use:stylex={{
+          height: "100%",
+          width: "100%",
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Icon {...(typeof constructor.icon === "string" ? { name: constructor.icon } : constructor.icon)} />
+        <Show when={rLoadinState()}>
+          <ProgressCircle
+            stylex={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
+            indeterminate
+          />
+        </Show>
+      </div>
+    </button>
+  );
+}

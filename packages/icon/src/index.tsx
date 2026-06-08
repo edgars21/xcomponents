@@ -1,17 +1,26 @@
+// @ts-nocheck
 import { Component, untrack, createEffect } from "solid-js";
 import * as icons from "lucide-solid";
-import { stylex, type StyleXJs } from "@stylex/solid";
 import defaultLibrary from "./libraries/default";
 import { Dynamic } from "solid-js/web";
 import { create } from "lodash";
+import { lucideLibrary } from "./libraries/lucide";
+import {
+  stylex,
+  type StylexDefinition,
+  mergeStylexDefinitions,
+} from "@stylex/solid";
+false && stylex;
 
 const libraries = {
   default: defaultLibrary,
+  lucide: lucideLibrary,
 };
 let defautltLibraryName = "default" as const;
 
 export interface IconConfigLibraries {
   default: typeof defaultLibrary;
+  lucide: typeof lucideLibrary;
 }
 export interface IconConfigSettings {}
 
@@ -60,12 +69,8 @@ export type Constructor = {
   name: LibraryKeyUnion;
   size?: number;
   color?: string;
-  "pt:root"?: ElementSetter;
+  "pt:root"?: StylexDefinition;
 };
-interface ElementSetter {
-  attr?: Record<string, string>;
-  stylex?: (() => StyleXJs) | StyleXJs;
-}
 
 export default function Icon(p: Props) {
   const props = untrack(() => p);
@@ -103,29 +108,35 @@ export default function Icon(p: Props) {
     const { attributes, innerSvg } = result;
     return (
       <Dynamic
-        component="svg"
         {...{
           ...(attributes && attributes),
-          ...(constructor["pt:root"]?.attr && constructor["pt:root"]?.attr),
         }}
+        component="svg"
         width={constructor.size}
         height={constructor.size}
         color={constructor.color}
         innerHTML={innerSvg}
         ref={(el) => {
-          stylex(el as unknown as HTMLElement, () => ({
-            ...{
-              ...(constructor["pt:root"]?.stylex &&
-                (typeof constructor["pt:root"].stylex === "function"
-                  ? constructor["pt:root"].stylex()
-                  : constructor["pt:root"]?.stylex)),
-            },
-          }));
+          if (constructor["pt:root"]) {
+            // @ts-ignore
+            stylex(el as unknown as HTMLElement, () => constructor["pt:root"]);
+          }
         }}
       />
     );
   } else {
-    return <Dynamic component="span" innerHTML={icon} />;
+    return (
+      <Dynamic
+        component="span"
+        innerHTML={icon}
+        ref={(el) => {
+          if (constructor["pt:root"]) {
+            // @ts-ignore
+            stylex(el as unknown as HTMLElement, () => constructor["pt:root"]);
+          }
+        }}
+      />
+    );
   }
 }
 

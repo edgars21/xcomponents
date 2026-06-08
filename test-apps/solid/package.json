@@ -11,6 +11,7 @@
   "dependencies": {
     "@xcomponents2/icon": "0.1.0",
     "@xcomponents2/button": "0.1.0",
+    "@xcomponents2/text-input": "0.1.0",
     "@kobalte/core": "^0.13.11",
     "solid-js": "^1.9.9"
   },

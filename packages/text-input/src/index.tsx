@@ -9,7 +9,11 @@ import {
 import { Dynamic } from "solid-js/web";
 import Icon, { type Props as IconProps } from "@xcomponents2/icon";
 import ProgressCircle from "@xcomponents2/progress-circle";
-import { stylex, type StylexDefinition } from "@stylex/solid";
+import {
+  stylex,
+  type StylexDefinition,
+  mergeStylexDefinitions,
+} from "@stylex/solid";
 import { IconButton } from "@xcomponents2/button";
 false && stylex;
 
@@ -56,9 +60,10 @@ type Constructor = {
   endLabel?: string;
   endIcon?: IconProps["name"];
   endSlot?: JSX.Element;
-  clerable?: boolean;
+  clearable?: boolean;
   "pt:root"?: StylexDefinition;
   "pt:input"?: StylexDefinition;
+  "pt:placeholder"?: StylexDefinition;
 };
 
 export interface Api {
@@ -96,7 +101,8 @@ export function TextInput(props: TextInputProps): JSX.Element {
     "endLabel",
     "pt:root",
     "pt:input",
-    "clerable",
+    "pt:placeholder",
+    "clearable",
   ]);
 
   let value: string | number | null = constructor.value ?? null;
@@ -196,27 +202,54 @@ export function TextInput(props: TextInputProps): JSX.Element {
   const {
     onClick,
     onInput,
+    onChange,
     onFocus,
     onBlur,
     ...restElementAttributesAndEventListeners
   } = elementAttributesAndEventListeners;
 
+  console.log("rest", restElementAttributesAndEventListeners);
+
+  if (constructor["pt:root"]) {
+    console.log(
+      "merged",
+      mergeStylexDefinitions(
+        {
+          height: "28px",
+          width: "200px",
+          border: "1px solid #ccc",
+          padding: "0 4px",
+          boxSizing: "border-box",
+          display: "inline-block",
+          borderRadius: "4px",
+          cursor: "text",
+          outline: [["@focused", "1px solid blue"], "none"],
+          outlineOffset: "-1px",
+        },
+        constructor["pt:root"],
+      ),
+    );
+  }
+
   return (
     // @ts-ignore
     <div
       {...restElementAttributesAndEventListeners}
-      use:stylex={{
-        height: "28px",
-        width: "200px",
-        border: "1px solid #ccc",
-        padding: "0 4px",
-        boxSizing: "border-box",
-        display: "inline-block",
-        borderRadius: "4px",
-        cursor: "text",
-        outline: [["@focused", "1px solid blue"], "none"],
-        outlineOffset: "-1px",
-      }}
+      use:stylex={mergeStylexDefinitions(
+        {
+          height: "28px",
+          width: "200px",
+          border: "1px solid #ccc",
+          padding: "0 4px",
+          boxSizing: "border-box",
+          display: "inline-block",
+          borderRadius: "4px",
+          cursor: "text",
+          outline: [["@focused", "1px solid blue"], "none"],
+          outlineOffset: "-1px",
+        },
+        constructor["pt:root"],
+      )}
       ref={rootElement!}
       {...{
         ...(rDisabledState() && { disabled: true }),
@@ -256,17 +289,22 @@ export function TextInput(props: TextInputProps): JSX.Element {
           <input
             value={rValueState() == null ? "" : String(rValueState())}
             ref={inputElement!}
-            use:stylex={{
-              padding: "0",
-              height: "100%",
-              border: "none",
-              outline: "none",
-              background: "transparent",
-              boxShadow: "none",
-              position: "absolute",
-              inset: "0",
-            }}
+            use:stylex={mergeStylexDefinitions(
+              {
+                padding: "0",
+                height: "100%",
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                boxShadow: "none",
+                position: "absolute",
+                inset: "0",
+                color: "currentColor",
+              },
+              constructor["pt:input"],
+            )}
             type={inputType.kind}
+            {...inputType}
             onInput={(e) => {
               const target = e.target as HTMLInputElement;
               let value: string | number | null = target.value;
@@ -275,6 +313,10 @@ export function TextInput(props: TextInputProps): JSX.Element {
                 // @ts-ignore
                 onInput(e);
               }
+            }}
+            onChange={(e) => {
+              // @ts-ignore
+              onChange?.(e);
             }}
             onFocus={(e) => {
               api.focus();
@@ -290,24 +332,27 @@ export function TextInput(props: TextInputProps): JSX.Element {
           {constructor.placeholder && (
             <Show when={!rValueState()}>
               <div
-                use:stylex={{
-                  position: "absolute",
-                  inset: "0",
-                  opacity: "0.6",
-                  pointerEvents: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  whiteSpace: "nowrap",
-                  textOverflow: "ellipsis",
-                  overflow: "hidden",
-                }}
+                use:stylex={mergeStylexDefinitions(
+                  {
+                    position: "absolute",
+                    inset: "0",
+                    opacity: "0.6",
+                    pointerEvents: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                  },
+                  constructor["pt:placeholder"],
+                )}
               >
                 {constructor.placeholder}
               </div>
             </Show>
           )}
         </div>
-        {constructor.clerable && (
+        {constructor.clearable && (
           <Show when={!!rValueState()}>
             <IconButton
               pt:root={{
@@ -321,6 +366,12 @@ export function TextInput(props: TextInputProps): JSX.Element {
               }}
               onClick={() => {
                 setrValueState(null);
+                setTimeout(() => {
+                  // @ts-ignore
+                  onInput?.({ target: inputElement! } as any);
+                  // @ts-ignore
+                  onChange?.({ target: inputElement! } as any);
+                });
               }}
             />
           </Show>

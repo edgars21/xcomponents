@@ -208,28 +208,6 @@ export function TextInput(props: TextInputProps): JSX.Element {
     ...restElementAttributesAndEventListeners
   } = elementAttributesAndEventListeners;
 
-  console.log("rest", restElementAttributesAndEventListeners);
-
-  if (constructor["pt:root"]) {
-    console.log(
-      "merged",
-      mergeStylexDefinitions(
-        {
-          height: "28px",
-          width: "200px",
-          border: "1px solid #ccc",
-          padding: "0 4px",
-          boxSizing: "border-box",
-          display: "inline-block",
-          borderRadius: "4px",
-          cursor: "text",
-          outline: [["@focused", "1px solid blue"], "none"],
-          outlineOffset: "-1px",
-        },
-        constructor["pt:root"],
-      ),
-    );
-  }
 
   return (
     // @ts-ignore

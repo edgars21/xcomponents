@@ -52,10 +52,10 @@ type Constructor = {
         max?: number;
         step?: string;
       };
-  ref?: (api: Api) => void;
+  ref?: (api: ButtonApi) => void;
   startSlot?: JSX.Element;
   startIcon?: IconProps["name"];
-  endIcon?: IconProps["name"];
+  endIcon?: IconProps["name"] | IconProps;
   endSlot?: JSX.Element;
   label: string | JSX.Element;
   "pt:root"?: StylexDefinition;
@@ -63,12 +63,13 @@ type Constructor = {
   "pt:label"?: StylexDefinition;
 };
 
-export interface Api {
+export interface ButtonApi {
   element: HTMLButtonElement;
   setDisabled: (state: boolean) => void;
   setLoading: (state: boolean) => void;
   isDisabled: boolean;
   isLoading: boolean;
+  setLabel: (state: string | JSX.Element) => void;
 }
 
 enum TagType {
@@ -99,15 +100,15 @@ export function Button(props: ButtonProps): JSX.Element {
     ],
   );
 
-  let value: string | number | null = null;
   let loading = false;
   let disabled = false;
+  let label: string | JSX.Element = constructor.label;
 
   const [rLoadinState, setrLoadinState] = createSignal(loading);
   const [rDisabledState, setrDisabledState] = createSignal(loading);
-  const [rValueState, setrValueState] = createSignal(value);
+  const [rLabelState, setrLabelState] = createSignal(label);
 
-  const api: Api = {
+  const api: ButtonApi = {
     get element() {
       return rootElement!;
     },
@@ -124,6 +125,10 @@ export function Button(props: ButtonProps): JSX.Element {
     },
     get isLoading() {
       return loading;
+    },
+    setLabel(value: string | JSX.Element) {
+      label = value;
+      setrLabelState(value);
     },
   };
 
@@ -180,9 +185,9 @@ export function Button(props: ButtonProps): JSX.Element {
               : { border: "1px solid red" }
           }
         >
-          {constructor.label}
+          {rLabelState()}
         </div>
-        {constructor.endIcon && <Icon name={constructor.endIcon} />}
+        {constructor.endIcon && typeof constructor.endIcon === "string" ? <Icon name={constructor.endIcon} /> : <Icon {...constructor.endIcon as IconProps} />}
         {constructor.endSlot}
         <Show when={rLoadinState()}>
           <ProgressCircle
@@ -204,12 +209,19 @@ export type IconButtonProps = IconButtonConstructor &
   JSX.ButtonHTMLAttributes<HTMLButtonElement>;
 
 type IconButtonConstructor = {
-  ref?: (api: Api) => void;
+  ref?: (api: IconApi) => void;
   icon: IconProps["name"] | IconProps;
   "pt:root"?: StylexDefinition;
   "pt:container"?: StylexDefinition;
 };
 
+export interface IconApi {
+  element: HTMLButtonElement;
+  setDisabled: (state: boolean) => void;
+  setLoading: (state: boolean) => void;
+  isDisabled: boolean;
+  isLoading: boolean;
+}
 export function IconButton(props: IconButtonProps): JSX.Element {
   let rootElement: HTMLButtonElement;
 
@@ -226,7 +238,7 @@ export function IconButton(props: IconButtonProps): JSX.Element {
   const [rLoadinState, setrLoadinState] = createSignal(loading);
   const [rDisabledState, setrDisabledState] = createSignal(loading);
 
-  const api: Api = {
+  const api: IconApi = {
     get element() {
       return rootElement!;
     },

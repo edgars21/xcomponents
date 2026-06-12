@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 import { solidPlugin } from "esbuild-plugin-solid";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: ["src"],
   format: ["esm", "cjs"],
   dts: true,
   sourcemap: true,

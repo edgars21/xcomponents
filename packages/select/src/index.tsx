@@ -16,6 +16,7 @@ import {
 } from "@stylex/solid";
 import { Button, type ButtonApi, IconButton } from "@xcomponents2/button";
 import { Transition } from "solid-transition-group";
+import { Popper, type PopperApi } from "@xcomponents2/popper";
 false && stylex;
 
 export type SelectProps = Constructor &
@@ -71,6 +72,7 @@ export function Select(props: SelectProps): JSX.Element {
   let rootElement: HTMLDivElement;
   let inputElement: HTMLSelectElement;
   let trigger: ButtonApi;
+  let popper: PopperApi;
 
   const [constructor, elementAttributesAndEventListeners] = splitProps(props, [
     "placeholder",
@@ -145,13 +147,20 @@ export function Select(props: SelectProps): JSX.Element {
     open() {
       opened = true;
       setrOpenedState(true);
+      popper.open();
     },
     close() {
       opened = false;
       setrOpenedState(false);
+      popper.close();
     },
     toggleOpen() {
       opened = !opened;
+      if (opened) {
+        popper.open();
+      } else {
+        popper.close();
+      }
       setrOpenedState(opened);
     },
   };
@@ -177,6 +186,7 @@ export function Select(props: SelectProps): JSX.Element {
         height: "28px",
         width: "200px",
       }}
+      ref={rootElement!}
     >
       <div
         use:stylex={{
@@ -247,7 +257,19 @@ export function Select(props: SelectProps): JSX.Element {
             <option value={option.value}>{option.label}</option>
           ))}
         </select>
-        <Transition
+        <Popper anchor={rootElement!} ref={(api) => (popper = api)} placement="bottom" >
+          <div
+            use:stylex={{
+              border: "1px solid #ccc",
+              width: "150px",
+            }}
+          >
+            {constructor.options.map((option) => (
+              <div>{option.label}</div>
+            ))}
+          </div>
+        </Popper>
+        {/* <Transition
           onEnter={(el, done) => {
             el.animate(
               [
@@ -267,22 +289,8 @@ export function Select(props: SelectProps): JSX.Element {
             ).finished.then(done);
           }}
         >
-          <Show when={rOpenedState()}>
-            <div
-              use:stylex={{
-                border: "1px solid #ccc",
-                width: "200px",
-                bottom: "0",
-                position: "absolute",
-                transform: "translateY(calc(100% + 10px))",
-              }}
-            >
-              {constructor.options.map((option) => (
-                <div>{option.label}</div>
-              ))}
-            </div>
-          </Show>
-        </Transition>
+          <Show when={rOpenedState()}></Show>
+        </Transition> */}
       </div>
     </div>
   );

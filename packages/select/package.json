@@ -15,6 +15,7 @@
     "@xcomponents2/icon": "^0.1.0",
     "@xcomponents2/progress-circle": "^0.1.0",
     "@xcomponents2/shared": "^0.1.0",
+    "@xcomponents2/popper": "^0.1.0",
     "solid-transition-group": "^0.3.0"
   },
   "devDependencies": {

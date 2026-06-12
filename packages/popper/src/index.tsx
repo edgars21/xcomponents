@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   type JSX,
   untrack,
@@ -23,100 +22,118 @@ import {
   type OffsetOptions,
   type Strategy,
 } from "@floating-ui/dom";
-import { stylex, type StyleXJs } from "@stylex/solid";
 import {
-  createEventListenerWithCleanupFactory,
-  type ToAccessorsCfg,
-} from "@xcomponents/shared";
-
+  stylex,
+  type StylexDefinition,
+  mergeStylexDefinitions,
+} from "@stylex3/solid";
+import { createEventListenerWithCleanupFactory } from "@xcomponents2/shared/webApi";
 import { Portal } from "solid-js/web";
-
 false && stylex;
+declare module "solid-js" {
+  namespace JSX {
+    interface Directives {
+      stylex: StylexDefinition;
+    }
+  }
+}
 
-export type Props = Constructor & {
-  children: Slots["defaultSlot"];
-} & ApiBindings &
-  Events;
+export type PopperProps = PopperConstructor & PopperEvents;
 
-export interface Constructor {
-  ref?: (api: Api) => void;
+export interface PopperConstructor {
+  ref?: ((api: PopperApi) => void) | null;
+  children: JSX.Element;
   anchor: HTMLElement;
   placement?: FloatingUIPlacement;
-  arrow?: boolean;
+  arrow?:
+    | boolean
+    | {
+        size?: number;
+        color?: string;
+        bgColor?: string;
+        stylex?: StylexDefinition;
+      };
   trigger?: "hover" | "click" | "focus" | "manual";
   autoUpdate?: boolean;
-  middlewares?:
-    | {
-        offset?: OffsetOptions | false;
-      }
-    | false;
-  "pt:root"?: ElementSetter;
+  middlewares?: {
+    offset?: OffsetOptions;
+  } | null;
+  "pt:root"?: StylexDefinition | null;
   sameWidth?: boolean;
   strategy?: Strategy;
-  teleportTo?: HTMLElement;
-}
-interface ElementSetter {
-  attr?: Record<string, string>;
-  stylex?: (() => StyleXJs) | StyleXJs;
+  teleportTo?: HTMLElement | null;
 }
 
-type Slots = {
-  defaultSlot: JSX.Element;
-};
-
-export type ApiBindings = ToAccessorsCfg<Api, true, true>;
-
-interface Events {
+interface PopperEvents {
   onClick?: (e: Event) => void;
-  onOpen?: (api: Api) => void;
-  onClose?: (api: Api) => void;
+  onOpen?: (api: PopperApi) => void;
+  onClose?: (api: PopperApi) => void;
 }
 
-export interface Api {
+export interface PopperApi {
   readonly isOpen: boolean;
   open: () => void;
   close: () => void;
 }
 
-export default function Popper(p: Props) {
-  const props = Object.entries(untrack(() => p))
-    .filter(([_, value]) => value !== undefined)
-    .reduce<any>((obj, [key, value]) => {
-      obj[key] = value;
-      return obj;
-    }, {}) as Props;
+type tety = Required<OptionalProps<PopperConstructor>>;
 
-  const constructor = {
-    ...({
-      placement: "bottom",
-      arrow: false,
-      trigger: "manual",
-      autoUpdate: false,
-      sameWidth: false,
-      strategy: "fixed",
-    } as const),
-    ...(props as Constructor),
+function setDefaults<T extends Record<string, any>>(
+  value: T,
+  defaults: Required<OptionalProps<T>>,
+): Required<T> {
+  return {
+    ...defaults,
+    ...Object.entries(value)
+      .filter(([_, value]) => value !== undefined)
+      .reduce((obj: any, [key, value]) => {
+        obj[key] = value;
+        return obj;
+      }, {} as Required<T>),
   };
+}
 
-  const events = { ...props } as Events;
+type OptionalProps<T> = {
+  [K in keyof T as {} extends Pick<T, K> ? K : never]?: T[K];
+};
 
-  const slots = {
-    ...props,
-    defaultSlot: children(() => props.children)(),
-  } as Slots;
+type RequiredProps<T> = {
+  [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
+};
+
+type test = OptionalProps<PopperConstructor>;
+type test2 = RequiredProps<PopperConstructor>;
+
+export function Popper(props: PopperProps) {
+  const untrackedProps = untrack(() => props);
+  const constructorProps = untrackedProps as PopperConstructor;
+  const constructor = setDefaults(constructorProps, {
+    ref: null,
+    placement: "bottom",
+    arrow: false,
+    trigger: "manual",
+    autoUpdate: false,
+    sameWidth: false,
+    strategy: "fixed",
+    middlewares: null,
+    "pt:root": null,
+    teleportTo: null,
+  });
+  const events = { ...untrackedProps } as PopperEvents;
 
   const [addEventListenerWithCleanup, cleanupEventListeners] =
     createEventListenerWithCleanupFactory();
+  let autoUpdateCleanup: (() => void) | undefined;
 
-  let rootEl: HTMLDivElement;
-  let arrowEl: HTMLDivElement | undefined;
+  let rootElement: HTMLDivElement;
+  let arrowElement: HTMLDivElement | undefined;
 
   let isOpen = false;
   const [rIsOpen, setrIsOpen] = createSignal(false);
 
   let openCleanup: (() => void) | undefined;
 
-  const api: Api = {
+  const api: PopperApi = {
     get isOpen() {
       return isOpen;
     },
@@ -132,10 +149,10 @@ export default function Popper(p: Props) {
           window,
           "click",
           (e: Event) => {
-            if (!rootEl!.contains(e.target as Node)) {
+            if (!rootElement!.contains(e.target as Node)) {
               api.close();
             }
-          }
+          },
         );
       }, 0);
     },
@@ -151,16 +168,6 @@ export default function Popper(p: Props) {
       }
     },
   };
-
-  // if (apiBindings.setOpen) {
-  //   createEffect(() => {
-  //     api.setOpen(
-  //       typeof apiBindings.setOpen === "function"
-  //         ? apiBindings.setOpen()
-  //         : apiBindings.setOpen || false
-  //     );
-  //   });
-  // }
 
   onMount(() => {
     if (constructor.trigger !== "manual") {
@@ -194,35 +201,17 @@ export default function Popper(p: Props) {
 
   onCleanup(() => {
     cleanupEventListeners();
+    if (autoUpdateCleanup) {
+      autoUpdateCleanup();
+    }
+    if (openCleanup) {
+      openCleanup();
+    }
   });
 
-  const { stylex: stylexValue, attr } = constructor["pt:root"] || {};
   return (
     <Show when={rIsOpen()}>
       {(() => {
-        const rootStyles = {
-          border: "1px solid gray",
-          borderRadius: "4px",
-          boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-          backgroundColor: "#fff",
-          ...(stylexValue && typeof stylexValue === "function"
-            ? stylexValue()
-            : stylexValue),
-        };
-
-        let [borderSize, borderTyp, borderColor] =
-          typeof rootStyles.border === "string"
-            ? rootStyles.border.split(" ")
-            : [];
-
-        // @ts-ignore
-        if (rootStyles.borderColor) {
-          // @ts-ignore
-          borderColor = rootStyles.borderColor;
-        }
-
-        const haveBorder = !!borderSize && !!borderTyp && !!borderColor;
-
         const staticSide = {
           top: "bottom",
           right: "left",
@@ -230,14 +219,10 @@ export default function Popper(p: Props) {
           left: "right",
         }[constructor.placement.split("-")[0]!]!;
 
-        const arrowStyles = {
-          // @ts-ignore
-          backgroundColor: rootStyles.backgroundColor,
-          ...(haveBorder && {
-            border: `${borderSize} ${borderTyp}`,
-            borderColor: diamondBorderColor(staticSide as Side, borderColor),
-          }),
-        };
+        const [rRootPos, setrRootPos] = createSignal<{
+          x: number;
+          y: number;
+        }>();
 
         const [rArrowPos, setrArrowPos] = createSignal<{
           x: number;
@@ -246,44 +231,65 @@ export default function Popper(p: Props) {
 
         return (
           <OptionalWrapper
-            when={constructor.teleportTo instanceof HTMLElement}
-            wrap={(children) => (
-              <Portal mount={constructor.teleportTo}>{children}</Portal>
-            )}
+            when={!!constructor.teleportTo}
+            wrap={(children: JSX.Element) => {
+              const casetTeleportTo = constructor.teleportTo as HTMLElement;
+              return <Portal mount={casetTeleportTo}>{children}</Portal>;
+            }}
           >
             <div
-              {...(attr || {})}
               ref={async (el) => {
-                rootEl = el;
+                rootElement = el;
                 const update = async () => {
+                  console.log("middlewares", [
+                    ...(constructor.middlewares
+                      ? [shift({ crossAxis: true, padding: 3 })]
+                      : [shift({ crossAxis: true, padding: 3 })]),
+                    // ...(constructor.middlewares
+                    //   ? [
+                    //       ...(constructor.middlewares.offset
+                    //         ? []
+                    //         : [
+                    //             offset(
+                    //               constructor?.middlewares?.offset ?? 6,
+                    //             ),
+                    //           ]),
+                    //       // flip(),
+                    //       shift({ crossAxis: true, padding: 3 }),
+                    //     ])
+                    //   : [],
+                    ...(constructor.arrow
+                      ? [arrow({ element: arrowElement! })]
+                      : []),
+                  ]);
                   const { x, y, placement, middlewareData } =
-                    await computePosition(constructor.anchor, rootEl, {
+                    await computePosition(constructor.anchor, rootElement, {
                       strategy: constructor.strategy,
                       placement: constructor.placement,
                       middleware: [
-                        ...(constructor?.middlewares === false
-                          ? []
-                          : [
-                              ...(constructor?.middlewares?.offset === false
-                                ? []
-                                : [
-                                    offset(
-                                      constructor?.middlewares?.offset ?? 6
-                                    ),
-                                  ]),
-                              // flip(),
-                              shift({ crossAxis: true, padding: 3 }),
-                            ]),
+                        ...(constructor.middlewares
+                          ? [shift({ crossAxis: true, padding: 3 })]
+                          : [offset(6)]),
+                        // ...(constructor.middlewares
+                        //   ? [
+                        //       ...(constructor.middlewares.offset
+                        //         ? []
+                        //         : [
+                        //             offset(
+                        //               constructor?.middlewares?.offset ?? 6,
+                        //             ),
+                        //           ]),
+                        //       // flip(),
+                        //       shift({ crossAxis: true, padding: 3 }),
+                        //     ])
+                        //   : [],
                         ...(constructor.arrow
-                          ? [arrow({ element: arrowEl! })]
+                          ? [arrow({ element: arrowElement! })]
                           : []),
                       ],
                     });
-                  stylex(rootEl!, () => ({
-                    top: `${y}px`,
-                    left: `${x}px`,
-                    visibility: "visible",
-                  }));
+
+                  setrRootPos({ x, y });
                   if (middlewareData.arrow) {
                     setrArrowPos({
                       x: middlewareData.arrow.x || 0,
@@ -292,27 +298,26 @@ export default function Popper(p: Props) {
                   }
                 };
                 if (constructor.autoUpdate) {
-                  const cleanup = autoUpdate(
+                  autoUpdateCleanup = autoUpdate(
                     constructor.anchor,
-                    rootEl,
-                    update
+                    rootElement,
+                    update,
                   );
                 } else {
                   update();
                 }
-              }}
-              use:stylex={{
-                ...{
-                  ...rootStyles,
+
+                stylex(rootElement!, () => ({
+                  width: "max-content",
+                  height: "max-content",
                   position: constructor.strategy,
                   zIndex: "9999",
-                  visibility: "hidden",
-                  top: 0,
-                  left: 0,
+                  top: `${rRootPos()?.y || 0}px`,
+                  left: `${rRootPos()?.x || 0}px`,
                   ...(constructor.sameWidth && {
                     width: `${constructor.anchor.offsetWidth}px`,
                   }),
-                },
+                }));
               }}
               {...{
                 ...(events.onClick && {
@@ -322,25 +327,45 @@ export default function Popper(p: Props) {
                 }),
               }}
             >
-              {constructor.arrow ? (
-                <div
-                  ref={arrowEl}
-                  use:stylex={{
-                    ...{
-                      ...arrowStyles,
-                      boxSizing: "border-box",
-                      width: "6px",
-                      height: "6px",
-                      position: "absolute",
-                      top: (rArrowPos()?.y || 0) + "px",
-                      left: (rArrowPos()?.x || 0) + "px",
-                      transform: "rotate(45deg)",
-                      [staticSide]: "-3px",
-                    },
-                  }}
-                ></div>
-              ) : null}
-              <span>{slots.defaultSlot}</span>
+              {constructor.arrow &&
+                (() => {
+                  const {
+                    size,
+                    color,
+                    bgColor,
+                    stylex: stylexDeclaration,
+                  } = typeof constructor.arrow === "object"
+                    ? constructor.arrow
+                    : {};
+                  return (
+                    <div
+                      ref={arrowElement}
+                      use:stylex={mergeStylexDefinitions(
+                        {
+                          boxSizing: "border-box",
+                          width: "6px",
+                          height: "6px",
+                          position: "absolute",
+                          top: (rArrowPos()?.y || 0) + "px",
+                          left: (rArrowPos()?.x || 0) + "px",
+                          transform: "rotate(45deg)",
+                          [staticSide]: "-3px",
+                          ...(color && {
+                            borderColor: color,
+                          }),
+                          ...(size && {
+                            borderWidth: size,
+                          }),
+                          ...(bgColor && {
+                            backgroundColor: bgColor,
+                          }),
+                        },
+                        stylexDeclaration,
+                      )}
+                    ></div>
+                  );
+                })()}
+              {constructor.children}
             </div>
           </OptionalWrapper>
         );
@@ -349,25 +374,16 @@ export default function Popper(p: Props) {
   );
 }
 
-function OptionalWrapper(props) {
-  return props.when ? props.wrap(props.children) : props.children;
+function OptionalWrapper({
+  when,
+  wrap,
+  children,
+}: {
+  when: boolean;
+  wrap: (children: JSX.Element) => JSX.Element;
+  children: JSX.Element;
+}) {
+  return when ? wrap(children) : children;
 }
 
 type Side = "top" | "right" | "bottom" | "left";
-
-function diamondBorderColor(
-  outside: Side,
-  color: string,
-  transparent = "transparent"
-) {
-  switch (outside) {
-    case "top":
-      return `${color} ${transparent} ${transparent} ${color}`;
-    case "right":
-      return `${color} ${color} ${transparent} ${transparent}`;
-    case "bottom":
-      return `${transparent} ${color} ${color} ${transparent}`;
-    case "left":
-      return `${transparent} ${transparent} ${color} ${color}`;
-  }
-}

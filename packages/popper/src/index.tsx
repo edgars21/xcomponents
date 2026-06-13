@@ -68,7 +68,7 @@ export interface PopperConstructor {
   teleportTo?: HTMLElement | null;
 }
 
-interface PopperEvents {
+export interface PopperEvents {
   onClick?: (e: Event) => void;
   onOpen?: (api: PopperApi) => void;
   onClose?: (api: PopperApi) => void;
@@ -79,8 +79,6 @@ export interface PopperApi {
   open: () => void;
   close: () => void;
 }
-
-type tety = Required<OptionalProps<PopperConstructor>>;
 
 function setDefaults<T extends Record<string, any>>(
   value: T,
@@ -104,9 +102,6 @@ type OptionalProps<T> = {
 type RequiredProps<T> = {
   [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
 };
-
-type test = OptionalProps<PopperConstructor>;
-type test2 = RequiredProps<PopperConstructor>;
 
 export function Popper(props: PopperProps) {
   const untrackedProps = untrack(() => props);
@@ -213,14 +208,16 @@ export function Popper(props: PopperProps) {
     }
   });
 
-  const mountTransition = constructor["pt:root"]?.mtransition;
+  const { mtransition, ...restPtRoot } = constructor["pt:root"] || {};
   return (
     <OptionalWrapper
-      when={!!mountTransition}
+      when={!!mtransition}
       wrap={(children: JSX.Element) => {
-        const castMountTransition = mountTransition as Mtransition;
-        // @ts-ignore
-        return <Transition transition={castMountTransition}>{children}</Transition>;
+        const castMountTransition = mtransition as Mtransition;
+        return (
+          // @ts-ignore
+          <Transition transition={castMountTransition}>{children}</Transition>
+        );
       }}
     >
       <Show when={rIsOpen()}>
@@ -260,8 +257,13 @@ export function Popper(props: PopperProps) {
                         placement: constructor.placement,
                         middleware: [
                           ...(constructor.middlewares
-                            ? [shift({ crossAxis: true, padding: 3 })]
-                            : [offset(6)]),
+                            ? [
+                                ...(constructor.middlewares.offset
+                                  ? [offset(constructor.middlewares.offset)]
+                                  : []),
+                              ]
+                            : []),
+                          // : [offset(6)]),
                           // ...(constructor.middlewares
                           //   ? [
                           //       ...(constructor.middlewares.offset
@@ -299,17 +301,22 @@ export function Popper(props: PopperProps) {
                     update();
                   }
 
-                  stylex(rootElement!, () => ({
-                    width: "max-content",
-                    height: "max-content",
-                    position: constructor.strategy,
-                    zIndex: "9999",
-                    top: `${rRootPos()?.y || 0}px`,
-                    left: `${rRootPos()?.x || 0}px`,
-                    ...(constructor.sameWidth && {
-                      width: `${constructor.anchor.offsetWidth}px`,
-                    }),
-                  }));
+                  stylex(rootElement!, () =>
+                    mergeStylexDefinitions(
+                      {
+                        width: "max-content",
+                        height: "max-content",
+                        position: constructor.strategy,
+                        zIndex: "9999",
+                        top: `${rRootPos()?.y || 0}px`,
+                        left: `${rRootPos()?.x || 0}px`,
+                        ...(constructor.sameWidth && {
+                          width: `${constructor.anchor.offsetWidth}px`,
+                        }),
+                      },
+                      restPtRoot,
+                    ),
+                  );
                 }}
                 {...{
                   ...(events.onClick && {

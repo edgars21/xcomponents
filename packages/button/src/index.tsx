@@ -178,16 +178,13 @@ export function Button(props: ButtonProps): JSX.Element {
         ></div>
         {constructor.startSlot}
         {constructor.startIcon && <Icon name={constructor.startIcon} />}
-        <div
-          use:stylex={
-            constructor["pt:label"]
-              ? (constructor["pt:label"] as StylexDefinition)
-              : { border: "1px solid red" }
-          }
-        >
-          {rLabelState()}
-        </div>
-        {constructor.endIcon && typeof constructor.endIcon === "string" ? <Icon name={constructor.endIcon} /> : <Icon {...constructor.endIcon as IconProps} />}
+        <div use:stylex={constructor["pt:label"]}>{rLabelState()}</div>
+        {constructor.endIcon &&
+          (typeof constructor.endIcon === "string" ? (
+            <Icon name={constructor.endIcon} />
+          ) : (
+            <Icon {...(constructor.endIcon as IconProps)} />
+          ))}
         {constructor.endSlot}
         <Show when={rLoadinState()}>
           <ProgressCircle
@@ -280,13 +277,16 @@ export function IconButton(props: IconButtonProps): JSX.Element {
     <button
       {...buttonElemetnAttributesAdnEventListeners}
       ref={rootElement!}
-      use:stylex={mergeStylexDefinitions({
-        width: "20px",
-        height: "20px",
-        boxSizing: "border-box",
-        padding: "0",
-        border: "1px solid gray",
-      }, constructor["pt:root"])}
+      use:stylex={mergeStylexDefinitions(
+        {
+          width: "20px",
+          height: "20px",
+          boxSizing: "border-box",
+          padding: "0",
+          border: "1px solid gray",
+        },
+        constructor["pt:root"],
+      )}
       {...{
         ...(rDisabledState() && { disabled: true }),
         ...(rLoadinState() && { loading: true }),
@@ -302,7 +302,11 @@ export function IconButton(props: IconButtonProps): JSX.Element {
           justifyContent: "center",
         }}
       >
-        <Icon {...(typeof constructor.icon === "string" ? { name: constructor.icon } : constructor.icon)} />
+        <Icon
+          {...(typeof constructor.icon === "string"
+            ? { name: constructor.icon }
+            : constructor.icon)}
+        />
         <Show when={rLoadinState()}>
           <ProgressCircle
             stylex={{

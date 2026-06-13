@@ -17,7 +17,9 @@ import {
 } from "@stylex3/solid";
 import { Button, type ButtonApi, IconButton } from "@xcomponents2/button";
 import { Transition } from "solid-transition-group";
-import { Popper, type PopperApi } from "@xcomponents2/popper";
+import { Dropdown, type DropdownApi } from "@xcomponents2/dropdown";
+
+import { Menu } from "@xcomponents2/menu";
 false && stylex;
 
 export type SelectProps = Constructor &
@@ -73,7 +75,8 @@ export function Select(props: SelectProps): JSX.Element {
   let rootElement: HTMLDivElement;
   let inputElement: HTMLSelectElement;
   let trigger: ButtonApi;
-  let popper: PopperApi;
+  let dropdown: DropdownApi;
+  let clearButtonElement: HTMLButtonElement;
 
   const [constructor, elementAttributesAndEventListeners] = splitProps(props, [
     "placeholder",
@@ -148,19 +151,19 @@ export function Select(props: SelectProps): JSX.Element {
     open() {
       opened = true;
       setrOpenedState(true);
-      popper.open();
+      dropdown.open();
     },
     close() {
       opened = false;
       setrOpenedState(false);
-      popper.close();
+      dropdown.close();
     },
     toggleOpen() {
       opened = !opened;
       if (opened) {
-        popper.open();
+        dropdown.open();
       } else {
-        popper.close();
+        dropdown.close();
       }
       setrOpenedState(opened);
     },
@@ -214,13 +217,22 @@ export function Select(props: SelectProps): JSX.Element {
             width: "100%",
             height: "100%",
           }}
-          onClick={() => {
-            api.toggleOpen();
+          onClick={(e) => {
+            if (clearButtonElement) {
+              if (!clearButtonElement!.contains(e.target)) {
+                api.toggleOpen();
+              }
+            } else {
+              api.toggleOpen();
+            }
           }}
           {...(constructor.clearable && {
             endSlot: (
               <Show when={!!rValueState()}>
                 <IconButton
+                  ref={(api: any) => {
+                    clearButtonElement = api.element;
+                  }}
                   pt:root={{
                     width: "16px",
                     height: "16px",
@@ -230,7 +242,7 @@ export function Select(props: SelectProps): JSX.Element {
                     name: "lucide:x",
                     size: 12,
                   }}
-                  onClick={() => {
+                  onClick={(e) => {
                     api.setValue(null);
                   }}
                 />
@@ -258,80 +270,23 @@ export function Select(props: SelectProps): JSX.Element {
             <option value={option.value}>{option.label}</option>
           ))}
         </select>
-        <Popper
+        <Dropdown
           anchor={rootElement!}
-          ref={(api) => (popper = api)}
+          ref={(api) => (dropdown = api)}
           placement="bottom"
-          pt:root={{
-            // mtransition: {
-            //   insert: {
-            //     transform: animate(
-            //       "translateY(-10px)",
-            //       {
-            //         duration: 300,
-            //       },
-            //       "translateY(0)",
-            //     ),
-            //     opacity: animate(
-            //       0,
-            //       {
-            //         duration: 300,
-            //       },
-            //       1,
-            //     ),
-            //   },
-            //   remove: {
-            //     transform: animate(
-            //       "translateY(-10px)",
-            //       {
-            //         duration: 300,
-            //       },
-            //       "translateY(0)",
-            //     ),
-            //     opacity: animate(
-            //       0,
-            //       {
-            //         duration: 300,
-            //       },
-            //       1,
-            //     ),
-            //   },
-            // },
+          sameWidth
+          onClose={() => {
+            api.close();
           }}
         >
-          <div
-            use:stylex={{
-              border: "1px solid #ccc",
-              width: "150px",
+          <Menu
+            options={constructor.options}
+            onSelect={(value) => {
+              api.setValue(value);
+              api.close();
             }}
-          >
-            {constructor.options.map((option) => (
-              <div>{option.label}</div>
-            ))}
-          </div>
-        </Popper>
-        {/* <Transition
-          onEnter={(el, done) => {
-            el.animate(
-              [
-                { opacity: 0, transform: "translateY(calc(100%))" },
-                { opacity: 1, transform: "translateY(calc(100% + 10px))" },
-              ],
-              { duration: 300, easing: "ease-out" },
-            ).finished.then(done);
-          }}
-          onExit={(el, done) => {
-            el.animate(
-              [
-                { opacity: 1, transform: "translateY(calc(100% + 10px))" },
-                { opacity: 0, transform: "translateY(calc(100%))" },
-              ],
-              { duration: 300, easing: "ease-in" },
-            ).finished.then(done);
-          }}
-        >
-          <Show when={rOpenedState()}></Show>
-        </Transition> */}
+          />
+        </Dropdown>
       </div>
     </div>
   );

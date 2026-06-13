@@ -84,7 +84,6 @@ export function Transition(props: TransitionProps): JSX.Element {
       mode: TRANSITION_MODE_MAP["outin"],
       appear: false,
       onEnter(el, done) {
-        console.log("insert", el);
         if (insert) {
           // @ts-ignore
           const stylex = el?.stylex as Stylex;
@@ -132,7 +131,6 @@ export function Transition(props: TransitionProps): JSX.Element {
         }
       },
       onExit(el, done) {
-        console.log("remove", el);
         if (remove) {
           const allAfterEnd = Object.entries(remove).map(([key, value]) => {
             return new Promise((resolve) => {

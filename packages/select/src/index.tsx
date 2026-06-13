@@ -13,7 +13,8 @@ import {
   stylex,
   type StylexDefinition,
   mergeStylexDefinitions,
-} from "@stylex/solid";
+  animate,
+} from "@stylex3/solid";
 import { Button, type ButtonApi, IconButton } from "@xcomponents2/button";
 import { Transition } from "solid-transition-group";
 import { Popper, type PopperApi } from "@xcomponents2/popper";
@@ -257,7 +258,47 @@ export function Select(props: SelectProps): JSX.Element {
             <option value={option.value}>{option.label}</option>
           ))}
         </select>
-        <Popper anchor={rootElement!} ref={(api) => (popper = api)} placement="bottom" >
+        <Popper
+          anchor={rootElement!}
+          ref={(api) => (popper = api)}
+          placement="bottom"
+          pt:root={{
+            // mtransition: {
+            //   insert: {
+            //     transform: animate(
+            //       "translateY(-10px)",
+            //       {
+            //         duration: 300,
+            //       },
+            //       "translateY(0)",
+            //     ),
+            //     opacity: animate(
+            //       0,
+            //       {
+            //         duration: 300,
+            //       },
+            //       1,
+            //     ),
+            //   },
+            //   remove: {
+            //     transform: animate(
+            //       "translateY(-10px)",
+            //       {
+            //         duration: 300,
+            //       },
+            //       "translateY(0)",
+            //     ),
+            //     opacity: animate(
+            //       0,
+            //       {
+            //         duration: 300,
+            //       },
+            //       1,
+            //     ),
+            //   },
+            // },
+          }}
+        >
           <div
             use:stylex={{
               border: "1px solid #ccc",

@@ -14,6 +14,10 @@
     "./webApi": {
       "types": "./dist/webApi.d.ts",
       "import": "./dist/webApi.js"
+    },
+    "./transition": {
+      "types": "./dist/transition.d.ts",
+      "import": "./dist/transition.js"
     }
   },
   "files": [
@@ -30,6 +34,10 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "solid-js": "^1.9.9"
+    "solid-js": "^1.9.13"
+  },
+  "dependencies": {
+    "@solid-primitives/refs": "^1.1.3",
+    "@stylex3/solid": "file:/Users/edgars/1_Projects/13.18_v3-stylex/packages/solid/"
   }
 }

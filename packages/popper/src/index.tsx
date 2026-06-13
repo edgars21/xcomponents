@@ -25,9 +25,13 @@ import {
 import {
   stylex,
   type StylexDefinition,
+  type StylexDefinitionWithMtransition,
+  type Mtransition,
   mergeStylexDefinitions,
+  animate,
 } from "@stylex3/solid";
 import { createEventListenerWithCleanupFactory } from "@xcomponents2/shared/webApi";
+import { Transition } from "@xcomponents2/shared/transition";
 import { Portal } from "solid-js/web";
 false && stylex;
 declare module "solid-js" {
@@ -58,7 +62,7 @@ export interface PopperConstructor {
   middlewares?: {
     offset?: OffsetOptions;
   } | null;
-  "pt:root"?: StylexDefinition | null;
+  "pt:root"?: StylexDefinitionWithMtransition | null;
   sameWidth?: boolean;
   strategy?: Strategy;
   teleportTo?: HTMLElement | null;
@@ -209,168 +213,157 @@ export function Popper(props: PopperProps) {
     }
   });
 
+  const mountTransition = constructor["pt:root"]?.mtransition;
   return (
-    <Show when={rIsOpen()}>
-      {(() => {
-        const staticSide = {
-          top: "bottom",
-          right: "left",
-          bottom: "top",
-          left: "right",
-        }[constructor.placement.split("-")[0]!]!;
+    <OptionalWrapper
+      when={!!mountTransition}
+      wrap={(children: JSX.Element) => {
+        const castMountTransition = mountTransition as Mtransition;
+        // @ts-ignore
+        return <Transition transition={castMountTransition}>{children}</Transition>;
+      }}
+    >
+      <Show when={rIsOpen()}>
+        {(() => {
+          const staticSide = {
+            top: "bottom",
+            right: "left",
+            bottom: "top",
+            left: "right",
+          }[constructor.placement.split("-")[0]!]!;
 
-        const [rRootPos, setrRootPos] = createSignal<{
-          x: number;
-          y: number;
-        }>();
+          const [rRootPos, setrRootPos] = createSignal<{
+            x: number;
+            y: number;
+          }>();
 
-        const [rArrowPos, setrArrowPos] = createSignal<{
-          x: number;
-          y: number;
-        }>();
+          const [rArrowPos, setrArrowPos] = createSignal<{
+            x: number;
+            y: number;
+          }>();
 
-        return (
-          <OptionalWrapper
-            when={!!constructor.teleportTo}
-            wrap={(children: JSX.Element) => {
-              const casetTeleportTo = constructor.teleportTo as HTMLElement;
-              return <Portal mount={casetTeleportTo}>{children}</Portal>;
-            }}
-          >
-            <div
-              ref={async (el) => {
-                rootElement = el;
-                const update = async () => {
-                  console.log("middlewares", [
-                    ...(constructor.middlewares
-                      ? [shift({ crossAxis: true, padding: 3 })]
-                      : [shift({ crossAxis: true, padding: 3 })]),
-                    // ...(constructor.middlewares
-                    //   ? [
-                    //       ...(constructor.middlewares.offset
-                    //         ? []
-                    //         : [
-                    //             offset(
-                    //               constructor?.middlewares?.offset ?? 6,
-                    //             ),
-                    //           ]),
-                    //       // flip(),
-                    //       shift({ crossAxis: true, padding: 3 }),
-                    //     ])
-                    //   : [],
-                    ...(constructor.arrow
-                      ? [arrow({ element: arrowElement! })]
-                      : []),
-                  ]);
-                  const { x, y, placement, middlewareData } =
-                    await computePosition(constructor.anchor, rootElement, {
-                      strategy: constructor.strategy,
-                      placement: constructor.placement,
-                      middleware: [
-                        ...(constructor.middlewares
-                          ? [shift({ crossAxis: true, padding: 3 })]
-                          : [offset(6)]),
-                        // ...(constructor.middlewares
-                        //   ? [
-                        //       ...(constructor.middlewares.offset
-                        //         ? []
-                        //         : [
-                        //             offset(
-                        //               constructor?.middlewares?.offset ?? 6,
-                        //             ),
-                        //           ]),
-                        //       // flip(),
-                        //       shift({ crossAxis: true, padding: 3 }),
-                        //     ])
-                        //   : [],
-                        ...(constructor.arrow
-                          ? [arrow({ element: arrowElement! })]
-                          : []),
-                      ],
-                    });
-
-                  setrRootPos({ x, y });
-                  if (middlewareData.arrow) {
-                    setrArrowPos({
-                      x: middlewareData.arrow.x || 0,
-                      y: middlewareData.arrow.y || 0,
-                    });
-                  }
-                };
-                if (constructor.autoUpdate) {
-                  autoUpdateCleanup = autoUpdate(
-                    constructor.anchor,
-                    rootElement,
-                    update,
-                  );
-                } else {
-                  update();
-                }
-
-                stylex(rootElement!, () => ({
-                  width: "max-content",
-                  height: "max-content",
-                  position: constructor.strategy,
-                  zIndex: "9999",
-                  top: `${rRootPos()?.y || 0}px`,
-                  left: `${rRootPos()?.x || 0}px`,
-                  ...(constructor.sameWidth && {
-                    width: `${constructor.anchor.offsetWidth}px`,
-                  }),
-                }));
-              }}
-              {...{
-                ...(events.onClick && {
-                  "on:click": (e: Event) => {
-                    events.onClick!(e);
-                  },
-                }),
+          return (
+            <OptionalWrapper
+              when={!!constructor.teleportTo}
+              wrap={(children: JSX.Element) => {
+                const casetTeleportTo = constructor.teleportTo as HTMLElement;
+                return <Portal mount={casetTeleportTo}>{children}</Portal>;
               }}
             >
-              {constructor.arrow &&
-                (() => {
-                  const {
-                    size,
-                    color,
-                    bgColor,
-                    stylex: stylexDeclaration,
-                  } = typeof constructor.arrow === "object"
-                    ? constructor.arrow
-                    : {};
-                  return (
-                    <div
-                      ref={arrowElement}
-                      use:stylex={mergeStylexDefinitions(
-                        {
-                          boxSizing: "border-box",
-                          width: "6px",
-                          height: "6px",
-                          position: "absolute",
-                          top: (rArrowPos()?.y || 0) + "px",
-                          left: (rArrowPos()?.x || 0) + "px",
-                          transform: "rotate(45deg)",
-                          [staticSide]: "-3px",
-                          ...(color && {
-                            borderColor: color,
-                          }),
-                          ...(size && {
-                            borderWidth: size,
-                          }),
-                          ...(bgColor && {
-                            backgroundColor: bgColor,
-                          }),
-                        },
-                        stylexDeclaration,
-                      )}
-                    ></div>
-                  );
-                })()}
-              {constructor.children}
-            </div>
-          </OptionalWrapper>
-        );
-      })()}
-    </Show>
+              <div
+                ref={async (el) => {
+                  rootElement = el;
+                  const update = async () => {
+                    const { x, y, placement, middlewareData } =
+                      await computePosition(constructor.anchor, rootElement, {
+                        strategy: constructor.strategy,
+                        placement: constructor.placement,
+                        middleware: [
+                          ...(constructor.middlewares
+                            ? [shift({ crossAxis: true, padding: 3 })]
+                            : [offset(6)]),
+                          // ...(constructor.middlewares
+                          //   ? [
+                          //       ...(constructor.middlewares.offset
+                          //         ? []
+                          //         : [
+                          //             offset(
+                          //               constructor?.middlewares?.offset ?? 6,
+                          //             ),
+                          //           ]),
+                          //       // flip(),
+                          //       shift({ crossAxis: true, padding: 3 }),
+                          //     ])
+                          //   : [],
+                          ...(constructor.arrow
+                            ? [arrow({ element: arrowElement! })]
+                            : []),
+                        ],
+                      });
+
+                    setrRootPos({ x, y });
+                    if (middlewareData.arrow) {
+                      setrArrowPos({
+                        x: middlewareData.arrow.x || 0,
+                        y: middlewareData.arrow.y || 0,
+                      });
+                    }
+                  };
+                  if (constructor.autoUpdate) {
+                    autoUpdateCleanup = autoUpdate(
+                      constructor.anchor,
+                      rootElement,
+                      update,
+                    );
+                  } else {
+                    update();
+                  }
+
+                  stylex(rootElement!, () => ({
+                    width: "max-content",
+                    height: "max-content",
+                    position: constructor.strategy,
+                    zIndex: "9999",
+                    top: `${rRootPos()?.y || 0}px`,
+                    left: `${rRootPos()?.x || 0}px`,
+                    ...(constructor.sameWidth && {
+                      width: `${constructor.anchor.offsetWidth}px`,
+                    }),
+                  }));
+                }}
+                {...{
+                  ...(events.onClick && {
+                    "on:click": (e: Event) => {
+                      events.onClick!(e);
+                    },
+                  }),
+                }}
+              >
+                {constructor.arrow &&
+                  (() => {
+                    const {
+                      size,
+                      color,
+                      bgColor,
+                      stylex: stylexDeclaration,
+                    } = typeof constructor.arrow === "object"
+                      ? constructor.arrow
+                      : {};
+                    return (
+                      <div
+                        ref={arrowElement}
+                        use:stylex={mergeStylexDefinitions(
+                          {
+                            boxSizing: "border-box",
+                            width: "6px",
+                            height: "6px",
+                            position: "absolute",
+                            top: (rArrowPos()?.y || 0) + "px",
+                            left: (rArrowPos()?.x || 0) + "px",
+                            transform: "rotate(45deg)",
+                            [staticSide]: "-3px",
+                            ...(color && {
+                              borderColor: color,
+                            }),
+                            ...(size && {
+                              borderWidth: size,
+                            }),
+                            ...(bgColor && {
+                              backgroundColor: bgColor,
+                            }),
+                          },
+                          stylexDeclaration,
+                        )}
+                      ></div>
+                    );
+                  })()}
+                {constructor.children}
+              </div>
+            </OptionalWrapper>
+          );
+        })()}
+      </Show>
+    </OptionalWrapper>
   );
 }
 

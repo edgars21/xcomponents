@@ -1,6 +1,8 @@
 import { Select } from "@xcomponents2/select";
-import { Transition } from "solid-transition-group";
 import { createSignal, Show } from "solid-js";
+// import { Transition } from "@xcomponents2/shared/transition";
+import { stylex, animate } from "@stylex3/solid";
+false && stylex;
 
 export default function App() {
   const [rOpenedState, setrOpenedState] = createSignal(true);
@@ -20,33 +22,36 @@ export function Inner() {
   return (
     <>
       <button onClick={() => setrOpenedState(!rOpenedState())}>Toggle</button>
-      <Transition
-        appear
-        onEnter={(el, done) => {
-          el.animate(
-            [
-              { opacity: 0, transform: "translateY(calc(100%))" },
-              { opacity: 1, transform: "translateY(calc(100% + 10px))" },
-            ],
-            { duration: 300, easing: "ease-out" },
-          ).finished.then(done);
+      {/* <Transition
+        insert={{
+          transform: animate("translateY(50%)", {
+            duration: 2000,
+          }, "translateY(0)"),
+          opacity: animate(0.5, {
+            duration: 2000,
+          }, 1),
+          backgroundColor: animate("blue", {
+            duration: 2000,
+          }),
         }}
-        onExit={(el, done) => {
-          el.animate(
-            [
-              { opacity: 1, transform: "translateY(calc(100% + 10px))" },
-              { opacity: 0, transform: "translateY(calc(100%))" },
-            ],
-            { duration: 300, easing: "ease-in" },
-          ).finished.then(done);
+        remove={{
+          transform: animate("translateY(50%)", {
+            duration: 2000,
+          }, "translateY(0)"),
+          opacity: animate(0.5, {
+            duration: 2000,
+          }, 1),
+          backgroundColor: animate("blue", {
+            duration: 2000,
+          }),
         }}
       >
         <Show when={rOpenedState()}>
           <div
-            style={{ width: "100px", height: "100px", background: "red" }}
+            use:stylex={{ width: "100px", height: "100px", background: "red" }}
           ></div>
         </Show>
-      </Transition>
+      </Transition> */}
       <Select
         clearable
         options={[

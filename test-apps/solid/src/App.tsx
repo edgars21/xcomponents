@@ -52,13 +52,16 @@ export function Inner() {
           ></div>
         </Show>
       </Transition> */}
-      <Select
-        clearable
-        options={[
-          { value: "1", label: "Option 1" },
-          { value: "2", label: "Option 2" },
-        ]}
-      />
+      <Show when={rOpenedState()}>
+          <Select
+            clearable
+            options={[
+              { value: "1", label: "Option 1" },
+              { value: "2", label: "Option 2" },
+            ]}
+          />
+      </Show>
     </>
   );
 }
+

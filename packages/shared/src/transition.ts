@@ -125,9 +125,11 @@ export function Transition(props: TransitionProps): JSX.Element {
           stylex.apply(newInsert);
           Promise.all(allAfterEnd).then(() => {
             done();
+            console.log("insert done");
           });
         } else {
           done();
+          console.log("insert done");
         }
       },
       onExit(el, done) {
@@ -147,9 +149,11 @@ export function Transition(props: TransitionProps): JSX.Element {
           stylex.apply(remove);
           Promise.all(allAfterEnd).then(() => {
             done();
+            console.log("remove done");
           });
         } else {
           done();
+          console.log("remove done");
         }
       },
     },

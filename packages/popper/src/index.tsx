@@ -208,10 +208,12 @@ export function Popper(props: PopperProps) {
     }
   });
 
+
   const { mtransition, ...restPtRoot } = constructor["pt:root"] || {};
   return (
     <OptionalWrapper
       when={!!mtransition}
+      // when={false}
       wrap={(children: JSX.Element) => {
         const castMountTransition = mtransition as Mtransition;
         return (

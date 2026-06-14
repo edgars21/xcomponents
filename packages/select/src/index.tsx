@@ -15,7 +15,12 @@ import {
   mergeStylexDefinitions,
   animate,
 } from "@stylex3/solid";
-import { Button, type ButtonApi, IconButton } from "@xcomponents2/button";
+import {
+  Button,
+  type ButtonApi,
+  IconButton,
+  type ButtonProps,
+} from "@xcomponents2/button";
 import { Transition } from "solid-transition-group";
 import { Dropdown, type DropdownApi } from "@xcomponents2/dropdown";
 
@@ -38,6 +43,7 @@ type Constructor = {
   endSlot?: JSX.Element;
   clearable?: boolean;
   nativeDropdown?: boolean;
+  trigger?: ButtonProps;
   "pt:root"?: StylexDefinition;
   "pt:input"?: StylexDefinition;
   "pt:placeholder"?: StylexDefinition;
@@ -94,6 +100,7 @@ export function Select(props: SelectProps): JSX.Element {
     "pt:input",
     "pt:placeholder",
     "clearable",
+    "trigger"
   ]);
 
   let value: Value = constructor.value ?? null;
@@ -186,11 +193,14 @@ export function Select(props: SelectProps): JSX.Element {
 
   return (
     <div
-      use:stylex={{
-        height: "28px",
-        width: "200px",
-      }}
       ref={rootElement!}
+      use:stylex={mergeStylexDefinitions(
+        {
+          height: "28px",
+          width: "200px",
+        },
+        constructor["pt:root"],
+      )}
     >
       <div
         use:stylex={{
@@ -217,6 +227,7 @@ export function Select(props: SelectProps): JSX.Element {
             width: "100%",
             height: "100%",
           }}
+          {...(constructor.trigger && { ...constructor.trigger })}
           onClick={(e) => {
             if (clearButtonElement) {
               if (!clearButtonElement!.contains(e.target)) {
@@ -263,7 +274,6 @@ export function Select(props: SelectProps): JSX.Element {
           onChange={(e) => {
             const value = e.currentTarget.value;
             api.setValue(value);
-            console.log("cange happended", trigger);
           }}
         >
           {constructor.options.map((option) => (

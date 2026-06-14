@@ -70,6 +70,8 @@ export interface ButtonApi {
   isDisabled: boolean;
   isLoading: boolean;
   setLabel: (state: string | JSX.Element) => void;
+  focus: () => void;
+  blur: () => void;
 }
 
 enum TagType {
@@ -102,11 +104,13 @@ export function Button(props: ButtonProps): JSX.Element {
 
   let loading = false;
   let disabled = false;
+  let focused = false;
   let label: string | JSX.Element = constructor.label;
 
   const [rLoadinState, setrLoadinState] = createSignal(loading);
   const [rDisabledState, setrDisabledState] = createSignal(loading);
   const [rLabelState, setrLabelState] = createSignal(label);
+  const [rFocusedState, setrFocusedState] = createSignal(focused);
 
   const api: ButtonApi = {
     get element() {
@@ -130,13 +134,32 @@ export function Button(props: ButtonProps): JSX.Element {
       label = value;
       setrLabelState(value);
     },
+    focus() {
+      focused = true;
+      setrFocusedState(true);
+      rootElement!.focus();
+    },
+    blur() {
+      focused = false;
+      setrFocusedState(false);
+      rootElement!.blur();
+    },
   };
+
+  const {
+    onClick,
+    onInput,
+    onChange,
+    onFocus,
+    onBlur,
+    ...restElementAttributesAndEventListeners
+  } = buttonElemetnAttributesAdnEventListeners;
 
   return (
     // @ts-ignore
     <Dynamic
       component={elementTagType}
-      {...buttonElemetnAttributesAdnEventListeners}
+      {...restElementAttributesAndEventListeners}
       ref={(ref: HTMLButtonElement) => {
         rootElement = ref;
         stylex(ref, () =>
@@ -156,7 +179,18 @@ export function Button(props: ButtonProps): JSX.Element {
       {...{
         ...(rDisabledState() && { disabled: true }),
         ...(rLoadinState() && { loading: true }),
+        // ...(rFocusedState() && { focused: true }),
       }}
+      // onFocus={(e: Event) => {
+      //   api.focus();
+      //   // @ts-ignore
+      //   onFocus?.(e);
+      // }}
+      // onBlur={(e: Event) => {
+      //   api.blur();
+      //   // @ts-ignore
+      //   onBlur?.(e);
+      // }}
     >
       <div
         use:stylex={{

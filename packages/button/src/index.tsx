@@ -157,8 +157,8 @@ export function Button(props: ButtonProps): JSX.Element {
 
   return (
     // @ts-ignore
-    <Dynamic
-      component={elementTagType}
+    <button
+      // component={elementTagType}
       {...restElementAttributesAndEventListeners}
       ref={(ref: HTMLButtonElement) => {
         rootElement = ref;
@@ -179,18 +179,22 @@ export function Button(props: ButtonProps): JSX.Element {
       {...{
         ...(rDisabledState() && { disabled: true }),
         ...(rLoadinState() && { loading: true }),
-        // ...(rFocusedState() && { focused: true }),
+        ...(rFocusedState() && { focused: true }),
       }}
-      // onFocus={(e: Event) => {
-      //   api.focus();
-      //   // @ts-ignore
-      //   onFocus?.(e);
-      // }}
-      // onBlur={(e: Event) => {
-      //   api.blur();
-      //   // @ts-ignore
-      //   onBlur?.(e);
-      // }}
+      onClick={(e: Event) => {
+        // @ts-ignore
+        onClick?.(e);
+      }}
+      onFocus={(e: Event) => {
+        api.focus();
+        // @ts-ignore
+        onFocus?.(e);
+      }}
+      onBlur={(e: Event) => {
+        api.blur();
+        // @ts-ignore
+        onBlur?.(e);
+      }}
     >
       <div
         use:stylex={{
@@ -232,7 +236,7 @@ export function Button(props: ButtonProps): JSX.Element {
           />
         </Show>
       </div>
-    </Dynamic>
+    </button>
   );
 }
 

@@ -236,6 +236,8 @@ export function Select(props: SelectProps): JSX.Element {
             } else {
               api.toggleOpen();
             }
+            // @ts-ignore
+            onClick?.(e);
           }}
           {...(constructor.clearable && {
             endSlot: (

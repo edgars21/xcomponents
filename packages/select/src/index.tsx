@@ -22,7 +22,11 @@ import {
   type ButtonProps,
 } from "@xcomponents2/button";
 import { Transition } from "solid-transition-group";
-import { Dropdown, type DropdownApi } from "@xcomponents2/dropdown";
+import {
+  Dropdown,
+  type DropdownProps,
+  type DropdownApi,
+} from "@xcomponents2/dropdown";
 
 import { Menu } from "@xcomponents2/menu";
 false && stylex;
@@ -47,6 +51,7 @@ type Constructor = {
   "pt:root"?: StylexDefinition;
   "pt:input"?: StylexDefinition;
   "pt:placeholder"?: StylexDefinition;
+  "pt:dropdown"?: Omit<DropdownProps, "ref" | "anchor" | "children">;
 };
 
 type Options = { value: string; label: string }[];
@@ -100,7 +105,8 @@ export function Select(props: SelectProps): JSX.Element {
     "pt:input",
     "pt:placeholder",
     "clearable",
-    "trigger"
+    "trigger",
+    "pt:dropdown",
   ]);
 
   let value: Value = constructor.value ?? null;
@@ -190,6 +196,9 @@ export function Select(props: SelectProps): JSX.Element {
     onBlur,
     ...restElementAttributesAndEventListeners
   } = elementAttributesAndEventListeners;
+
+  const { onClick: ptDropdownOnClick, ...restPtDropdown } =
+    constructor["pt:dropdown"] ?? {};
 
   return (
     <div
@@ -287,11 +296,15 @@ export function Select(props: SelectProps): JSX.Element {
           ref={(api) => (dropdown = api)}
           placement="bottom"
           sameWidth
-          onClose={() => {
+          onClose={(e) => {
             api.close();
+            // @ts-ignore
+            ptDropdownOnClick?.(e);
           }}
+          {...restPtDropdown}
         >
           <Menu
+            selected={value}
             options={constructor.options}
             onSelect={(value) => {
               api.setValue(value);

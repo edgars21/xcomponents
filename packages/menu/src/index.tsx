@@ -15,7 +15,7 @@ import {
   type StylexDefinition,
   mergeStylexDefinitions,
 } from "@stylex/solid";
-import { Button, type ButtonApi } from "@xcomponents2/button";
+import { Button, type ButtonApi, ButtonProps } from "@xcomponents2/button";
 false && stylex;
 
 declare module "solid-js" {
@@ -31,10 +31,11 @@ type Options = { value: string; label: string }[];
 type Selected = string | null;
 
 type MenuConstructor = {
-  ref?: (api: Api) => void;
+  ref?: (api: MenuApi) => void;
   options: Options;
   selected?: Selected;
   "pt:root"?: StylexDefinition;
+  "pt:item"?: ButtonProps;
 };
 
 type MenuItemInterface = {
@@ -43,6 +44,7 @@ type MenuItemInterface = {
     selected?: boolean;
     onSelect: () => void;
     ref: (api: MenuItemInterface["api"]) => void;
+    "pt:item"?: ButtonProps;
   };
   api: {
     setSelected: (value: boolean) => void;
@@ -54,9 +56,9 @@ export type MenuEvents = {
   onSelect: (value: string) => void;
 };
 
-export interface Api {
+export interface MenuApi {
   element: HTMLInputElement;
-  setSelected: (value: string) => void;
+  setSelected: (value: Selected) => void;
   get selected(): Selected;
 }
 
@@ -77,6 +79,7 @@ export function Menu(props: MenuProps): JSX.Element {
     "ref",
     "selected",
     "pt:root",
+    "pt:item",
     "options",
   ]);
 
@@ -90,37 +93,55 @@ export function Menu(props: MenuProps): JSX.Element {
 
   const items: MenuItemInterface["api"][] = [];
 
-  const api: Api = {
+  const api: MenuApi = {
     get element() {
       return rootElement!;
     },
-    setSelected(value: string) {
-      const itemApi = getItemApi(value, constructor.options, items);
-      if (itemApi) {
-        console.log("setSelected", value, "itemApi", itemApi);
-        previousSelected = selected;
-        selected = value;
-        setrSelectedState(value);
-        const previousItemApi = getItemApi(
-          previousSelected,
-          constructor.options,
-          items,
-        );
-        if (previousItemApi) previousItemApi.setSelected(false);
-        itemApi.setSelected(true);
-        events.onSelect?.(value);
-      }
+    setSelected(value: Selected) {
+      setSelected(value);
     },
     get selected() {
       return selected;
     },
   };
 
+  function setSelected(value: Selected) {
+    if (selected) {
+      previousSelected = selected;
+    }
+    if (!value) {
+      if (previousSelected) {
+        const itemApi = getItemApi(
+          previousSelected,
+          constructor.options,
+          items,
+        );
+        if (!itemApi) return;
+        itemApi.setSelected(false);
+      }
+    } else {
+      const itemApi = getItemApi(value, constructor.options, items);
+      if (!itemApi) return;
+      const previousItemApi = getItemApi(
+        previousSelected,
+        constructor.options,
+        items,
+      );
+      if (previousItemApi) previousItemApi.setSelected(false);
+      itemApi.setSelected(true);
+    }
+    selected = value;
+    setrSelectedState(value);
+  }
+
+  function handleMenChange(value: string) {
+    setSelected(value);
+    events.onSelect?.(value);
+  }
+
   onMount(() => {
     props.ref?.(api);
   });
-
-  console.log("menu list rerender: ", constructor.options);
 
   return (
     // @ts-ignore
@@ -139,8 +160,11 @@ export function Menu(props: MenuProps): JSX.Element {
         <MenuItem
           ref={(api) => items.push(api)}
           option={option}
-          onSelect={() => api.setSelected(option.value)}
+          onSelect={handleMenChange.bind(null, option.value)}
           {...(selected === option.value && { selected: true })}
+          {...constructor["pt:item"] && {
+            "pt:item": constructor["pt:item"],
+          }}
         />
       ))}
     </div>
@@ -154,7 +178,6 @@ function MenuItem(props: MenuItemInterface["construcotr"]): JSX.Element {
 
   const api: MenuItemInterface["api"] = {
     setSelected(value: boolean) {
-      console.log("------> Im an item api");
       selected = value;
       setRSelectedState(value);
     },
@@ -174,7 +197,7 @@ function MenuItem(props: MenuItemInterface["construcotr"]): JSX.Element {
   });
 
   return (
-    <Show when={!!refreshKey()} keyed>
+    <Show when={refreshKey()} keyed>
       <Button
         label={props.option.label}
         onClick={() => {
@@ -187,6 +210,7 @@ function MenuItem(props: MenuItemInterface["construcotr"]): JSX.Element {
           backgroundColor: [[":hover", "#cecece"], "#fff"],
         }}
         startIcon={rSelectedState() ? "lucide:check" : "empty"}
+        {...props["pt:item"]}
       />
     </Show>
   );

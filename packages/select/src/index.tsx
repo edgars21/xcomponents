@@ -28,7 +28,7 @@ import {
   type DropdownApi,
 } from "@xcomponents2/dropdown";
 
-import { Menu } from "@xcomponents2/menu";
+import { Menu, type MenuApi } from "@xcomponents2/menu";
 false && stylex;
 
 export type SelectProps = Constructor &
@@ -72,6 +72,7 @@ export interface Api {
   toggleOpen: () => void;
 }
 
+
 enum InputType {
   Text = "text",
   Password = "password",
@@ -87,6 +88,7 @@ export function Select(props: SelectProps): JSX.Element {
   let inputElement: HTMLSelectElement;
   let trigger: ButtonApi;
   let dropdown: DropdownApi;
+  let menu: MenuApi;
   let clearButtonElement: HTMLButtonElement;
 
   const [constructor, elementAttributesAndEventListeners] = splitProps(props, [
@@ -117,9 +119,7 @@ export function Select(props: SelectProps): JSX.Element {
 
   const [rLoadinState, setrLoadinState] = createSignal(loading);
   const [rDisabledState, setrDisabledState] = createSignal(loading);
-  const [rValueState, setrValueState] = createSignal<string | number | null>(
-    value,
-  );
+  const [rValueState, setrValueState] = createSignal<Value>(value);
   const [rFocusedState, setrFocusedState] = createSignal(focused);
   const [rOpenedState, setrOpenedState] = createSignal(opened);
 
@@ -222,7 +222,13 @@ export function Select(props: SelectProps): JSX.Element {
       >
         <Button
           ref={(api: any) => (trigger = api)}
-          label={rValueState() ?? constructor.placeholder}
+          label={
+            rValueState()
+              ? (getSelectedValue(String(rValueState()), constructor.options)
+                  ?.label ??
+                (constructor.placeholder || ""))
+              : constructor.placeholder || ""
+          }
           pt:label={{
             marginRight: "auto",
           }}
@@ -266,6 +272,9 @@ export function Select(props: SelectProps): JSX.Element {
                   }}
                   onClick={(e) => {
                     api.setValue(null);
+                    menu.setSelected(null);
+                    // @ts-ignore
+                    onChange?.({ target: { inputElement },currentTarget: { inputElement }, value: null } as any);
                   }}
                 />
               </Show>
@@ -304,11 +313,31 @@ export function Select(props: SelectProps): JSX.Element {
           {...restPtDropdown}
         >
           <Menu
+            ref={(api) => (menu = api)}
             selected={value}
             options={constructor.options}
             onSelect={(value) => {
               api.setValue(value);
               api.close();
+              // @ts-ignore
+              onChange?.({ target: { inputElement },currentTarget: { inputElement }, value: value } as any);
+            }}
+            pt:root={{
+              backgroundColor: "#1E1E1E",
+              padding: "6px 4px",
+              color: "#fff",
+            }}
+            // @ts-ignore
+            pt:item={{
+              "pt:root": {
+                backgroundColor: [[":hover", "#0C8CE9"], "transparent"],
+                boxShadow: "none",
+                border: "none",
+                height: "24px",
+                color: "#fff",
+                fontSize: "12px",
+                borderRadius: "5px"
+              },
             }}
           />
         </Dropdown>

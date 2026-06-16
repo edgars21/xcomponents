@@ -322,6 +322,7 @@ export function IconButton(props: IconButtonProps): JSX.Element {
           boxSizing: "border-box",
           padding: "0",
           border: "1px solid gray",
+          color: "currentColor"
         },
         constructor["pt:root"],
       )}

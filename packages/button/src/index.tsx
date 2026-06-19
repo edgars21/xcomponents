@@ -354,8 +354,17 @@ export type ToggleButtonProps = {
 export type ToggleButtonConstructor = ButtonConstructor & ToggleConstructor;
 export type ToggleButtonApi = ButtonApi & ToggleInterfaceApi;
 export function ToggleButton(props: ToggleButtonProps): JSX.Element {
-  console.log("ToggleButton props: ", props);
   return ToggleButtonInterface("button", props);
+}
+
+export type ToggleIconButtonProps = {
+  ref?: (api: ToggleIconButtonApi) => void;
+} & ToggleIconButtonConstructor &
+  NativeButtonEventsAndAttributes;
+export type ToggleIconButtonConstructor = IconButtonConstructor & ToggleConstructor;
+export type ToggleIconButtonApi = IconButtonApi & ToggleInterfaceApi;
+export function ToggleIconButton(props: ToggleIconButtonProps): JSX.Element {
+  return ToggleButtonInterface("icon-button", props);
 }
 
 export type ToggleInterfaceProps<T extends "button" | "icon-button"> =

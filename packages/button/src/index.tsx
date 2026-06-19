@@ -245,8 +245,6 @@ export interface IconButtonApi {
 export function IconButton(props: IconButtonProps): JSX.Element {
   let rootElement: HTMLButtonElement;
 
-  onMount(() => {});
-
   const [constructor, buttonElemetnAttributesAdnEventListeners] = splitProps(
     props,
     ["ref", "icon", "pt:root", "pt:container"],
@@ -294,6 +292,10 @@ export function IconButton(props: IconButtonProps): JSX.Element {
       constructor["pt:root"] as StylexDefinition,
     );
   }
+
+  onMount(() => {
+    constructor.ref?.(api);
+  });
 
   return (
     // @ts-ignore
@@ -350,7 +352,7 @@ export function IconButton(props: IconButtonProps): JSX.Element {
 export type ToggleButtonProps = {
   ref?: (api: ToggleButtonApi) => void;
 } & ToggleButtonConstructor &
-  NativeButtonEventsAndAttributes;
+  NativeButtonEventsAndAttributes & ToggleInterfaceEvents;
 export type ToggleButtonConstructor = ButtonConstructor & ToggleConstructor;
 export type ToggleButtonApi = ButtonApi & ToggleInterfaceApi;
 export function ToggleButton(props: ToggleButtonProps): JSX.Element {
@@ -360,8 +362,9 @@ export function ToggleButton(props: ToggleButtonProps): JSX.Element {
 export type ToggleIconButtonProps = {
   ref?: (api: ToggleIconButtonApi) => void;
 } & ToggleIconButtonConstructor &
-  NativeButtonEventsAndAttributes;
-export type ToggleIconButtonConstructor = IconButtonConstructor & ToggleConstructor;
+  NativeButtonEventsAndAttributes & ToggleInterfaceEvents;
+export type ToggleIconButtonConstructor = IconButtonConstructor &
+  ToggleConstructor;
 export type ToggleIconButtonApi = IconButtonApi & ToggleInterfaceApi;
 export function ToggleIconButton(props: ToggleIconButtonProps): JSX.Element {
   return ToggleButtonInterface("icon-button", props);
@@ -374,11 +377,13 @@ export type ToggleInterfaceProps<T extends "button" | "icon-button"> =
         api: (T extends "button" ? ButtonApi : IconButtonApi) &
           ToggleInterfaceApi,
       ) => void;
-    } & ToggleConstructor;
+    } & ToggleConstructor & ToggleInterfaceEvents;
 
 type ToggleConstructor = {
   toggled?: boolean;
 };
+
+
 
 export interface ToggleInterfaceApi {
   isToggled: boolean;
@@ -387,13 +392,21 @@ export interface ToggleInterfaceApi {
   toggleOff: () => void;
 }
 
+export type ToggleInterfaceEvents = {
+  onToggle?: (isToggled: boolean) => void;
+};
+
 export function ToggleButtonInterface<T extends "button" | "icon-button">(
   type: T,
   props: ToggleInterfaceProps<T>,
 ): JSX.Element {
-  const [constructor, restProps] = splitProps(props, ["ref", "toggled"]);
+  const [constructor, events, restProps] = splitProps(props, ["ref", "toggled"], ["onToggle"]);
 
-  const { onClick, ...restPropsWithoutOnClick } = restProps;
+  const {
+    onClick: extractedOnClick,
+    "pt:root": extractedPtRoot,
+    ...restPropsWithoutExtracted
+  } = restProps;
 
   let buttonOrIconButtonApi: T extends "button" ? ButtonApi : IconButtonApi;
   let toggled = constructor.toggled ?? false;
@@ -425,29 +438,41 @@ export function ToggleButtonInterface<T extends "button" | "icon-button">(
     }
   }
 
-  onMount(() => {
+  function customOnMount() {
     setToggleAttributeOnElement(toggled);
     constructor.ref?.({ ...buttonOrIconButtonApi, ...api });
-  });
+  }
 
   if (type === "button") {
     return (
       // @ts-ignore
       <Button
         // @ts-ignore
-        ref={(api: ButtonApi) => (buttonOrIconButtonApi = api)}
+        ref={(api: ButtonApi) => {
+          // @ts-ignore
+          buttonOrIconButtonApi = api;
+          customOnMount();
+        }}
         onClick={(e: Event) => {
+          const prevToggled = toggled;
           api.toggle();
           // @ts-ignore
-          onClick?.(e);
+          extractedOnClick?.(e);
+          if (events.onToggle && prevToggled !== toggled) {
+            // @ts-ignore
+            events.onToggle(toggled);
+          }
         }}
-        pt:root={{
-          [Symbol("backgroundColor")]: [
-            ["@toggled&:hover", "darkBlue"],
-            ["@toggled", "blue"],
-          ],
-        }}
-        {...restPropsWithoutOnClick}
+        pt:root={mergeStylexDefinitions(
+          {
+            [Symbol("backgroundColor")]: [
+              ["@toggled&:hover", "darkBlue"],
+              ["@toggled", "blue"],
+            ],
+          },
+          extractedPtRoot,
+        )}
+        {...restPropsWithoutExtracted}
       />
     );
   } else {
@@ -455,13 +480,31 @@ export function ToggleButtonInterface<T extends "button" | "icon-button">(
       // @ts-ignore
       <IconButton
         // @ts-ignore
-        ref={(api: IconButtonApi) => (buttonOrIconButtonApi = api)}
+        ref={(api: IconButtonApi) => {
+          // @ts-ignore
+          buttonOrIconButtonApi = api;
+          customOnMount();
+        }}
         onClick={(e: Event) => {
+          const prevToggled = toggled;
           api.toggle();
           // @ts-ignore
-          onClick?.(e);
+          extractedOnClick?.(e);
+          if (events.onToggle && prevToggled !== toggled) {
+            // @ts-ignore
+            events.onToggle(toggled);
+          }
         }}
-        {...restPropsWithoutOnClick}
+        pt:root={mergeStylexDefinitions(
+          {
+            [Symbol("backgroundColor")]: [
+              ["@toggled&:hover", "darkBlue"],
+              ["@toggled", "blue"],
+            ],
+          },
+          extractedPtRoot,
+        )}
+        {...restPropsWithoutExtracted}
       />
     );
   }

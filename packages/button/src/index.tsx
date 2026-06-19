@@ -24,35 +24,14 @@ declare module "solid-js" {
   }
 }
 
-export type ButtonProps = Constructor &
+export type ButtonProps = {
+  ref?: (api: ButtonApi) => void;
+} & ButtonConstructor &
   JSX.ButtonHTMLAttributes<HTMLButtonElement>;
 
-type Constructor = {
+type ButtonConstructor = {
   placeholder?: string;
   value?: string | number;
-  type?:
-    | "text"
-    | {
-        kind: "text";
-        minlength?: number;
-        maxlength?: number;
-        pattern?: string;
-      }
-    | "password"
-    | {
-        kind: "password";
-        minlength?: number;
-        maxlength?: number;
-        pattern?: string;
-      }
-    | "number"
-    | {
-        kind: "password";
-        min?: number;
-        max?: number;
-        step?: string;
-      };
-  ref?: (api: ButtonApi) => void;
   startSlot?: JSX.Element;
   startIcon?: IconProps["name"];
   endIcon?: IconProps["name"] | IconProps;
@@ -163,15 +142,17 @@ export function Button(props: ButtonProps): JSX.Element {
       ref={(ref: HTMLButtonElement) => {
         rootElement = ref;
         stylex(ref, () =>
-          // @ts-ignore
-          constructor["pt:root"]
-            ? // @ts-ignore
-              constructor["pt:root"]
-            : {
-                height: "28px",
-                padding: "0 6px",
-                boxSizing: "border-box",
-              },
+          mergeStylexDefinitions(
+            {
+              height: "28px",
+              padding: "0 6px",
+              boxSizing: "border-box",
+              backgroundColor: [[":hover", "#D3D3D3"], "#BCBCBC"],
+              borderWidth: "1px",
+              borderRadius: "3px",
+            },
+            constructor["pt:root"],
+          ),
         );
         // @ts-ignore
         constructor.ref?.(api);
@@ -240,17 +221,21 @@ export function Button(props: ButtonProps): JSX.Element {
   );
 }
 
-export type IconButtonProps = IconButtonConstructor &
+type NativeButtonEventsAndAttributes =
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>;
+
+export type IconButtonProps = {
+  ref?: (api: IconButtonApi) => void;
+} & IconButtonConstructor &
   JSX.ButtonHTMLAttributes<HTMLButtonElement>;
 
 type IconButtonConstructor = {
-  ref?: (api: IconApi) => void;
   icon: IconProps["name"] | IconProps;
   "pt:root"?: StylexDefinition;
   "pt:container"?: StylexDefinition;
 };
 
-export interface IconApi {
+export interface IconButtonApi {
   element: HTMLButtonElement;
   setDisabled: (state: boolean) => void;
   setLoading: (state: boolean) => void;
@@ -273,7 +258,7 @@ export function IconButton(props: IconButtonProps): JSX.Element {
   const [rLoadinState, setrLoadinState] = createSignal(loading);
   const [rDisabledState, setrDisabledState] = createSignal(loading);
 
-  const api: IconApi = {
+  const api: IconButtonApi = {
     get element() {
       return rootElement!;
     },
@@ -322,7 +307,7 @@ export function IconButton(props: IconButtonProps): JSX.Element {
           boxSizing: "border-box",
           padding: "0",
           border: "1px solid gray",
-          color: "currentColor"
+          color: "currentColor",
         },
         constructor["pt:root"],
       )}
@@ -360,4 +345,115 @@ export function IconButton(props: IconButtonProps): JSX.Element {
       </div>
     </button>
   );
+}
+
+export type ToggleButtonProps = {
+  ref?: (api: ToggleButtonApi) => void;
+} & ToggleButtonConstructor &
+  NativeButtonEventsAndAttributes;
+export type ToggleButtonConstructor = ButtonConstructor & ToggleConstructor;
+export type ToggleButtonApi = ButtonApi & ToggleInterfaceApi;
+export function ToggleButton(props: ToggleButtonProps): JSX.Element {
+  console.log("ToggleButton props: ", props);
+  return ToggleButtonInterface("button", props);
+}
+
+export type ToggleInterfaceProps<T extends "button" | "icon-button"> =
+  (T extends "button" ? ButtonConstructor : IconButtonConstructor) &
+    JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
+      ref?: (
+        api: (T extends "button" ? ButtonApi : IconButtonApi) &
+          ToggleInterfaceApi,
+      ) => void;
+    } & ToggleConstructor;
+
+type ToggleConstructor = {
+  toggled?: boolean;
+};
+
+export interface ToggleInterfaceApi {
+  isToggled: boolean;
+  toggle: () => void;
+  toggleOn: () => void;
+  toggleOff: () => void;
+}
+
+export function ToggleButtonInterface<T extends "button" | "icon-button">(
+  type: T,
+  props: ToggleInterfaceProps<T>,
+): JSX.Element {
+  const [constructor, restProps] = splitProps(props, ["ref", "toggled"]);
+
+  const { onClick, ...restPropsWithoutOnClick } = restProps;
+
+  let buttonOrIconButtonApi: T extends "button" ? ButtonApi : IconButtonApi;
+  let toggled = constructor.toggled ?? false;
+
+  const api: ToggleInterfaceApi = {
+    get isToggled() {
+      return toggled;
+    },
+    toggle() {
+      toggled = !toggled;
+      setToggleAttributeOnElement(toggled);
+    },
+    toggleOn() {
+      toggled = true;
+      setToggleAttributeOnElement(toggled);
+    },
+    toggleOff() {
+      toggled = false;
+      setToggleAttributeOnElement(toggled);
+    },
+  };
+
+  function setToggleAttributeOnElement(value: boolean) {
+    const element = buttonOrIconButtonApi.element;
+    if (value) {
+      element.setAttribute("toggled", "");
+    } else {
+      element.removeAttribute("toggled");
+    }
+  }
+
+  onMount(() => {
+    setToggleAttributeOnElement(toggled);
+    constructor.ref?.({ ...buttonOrIconButtonApi, ...api });
+  });
+
+  if (type === "button") {
+    return (
+      // @ts-ignore
+      <Button
+        // @ts-ignore
+        ref={(api: ButtonApi) => (buttonOrIconButtonApi = api)}
+        onClick={(e: Event) => {
+          api.toggle();
+          // @ts-ignore
+          onClick?.(e);
+        }}
+        pt:root={{
+          [Symbol("backgroundColor")]: [
+            ["@toggled&:hover", "darkBlue"],
+            ["@toggled", "blue"],
+          ],
+        }}
+        {...restPropsWithoutOnClick}
+      />
+    );
+  } else {
+    return (
+      // @ts-ignore
+      <IconButton
+        // @ts-ignore
+        ref={(api: IconButtonApi) => (buttonOrIconButtonApi = api)}
+        onClick={(e: Event) => {
+          api.toggle();
+          // @ts-ignore
+          onClick?.(e);
+        }}
+        {...restPropsWithoutOnClick}
+      />
+    );
+  }
 }

@@ -18,6 +18,18 @@
     "./transition": {
       "types": "./dist/transition.d.ts",
       "import": "./dist/transition.js"
+    },
+    "./toggleInterface": {
+      "types": "./dist/toggleInterface.d.ts",
+      "import": "./dist/toggleInterface.js"
+    },
+    "./props": {
+      "types": "./dist/props.d.ts",
+      "import": "./dist/props.js"
+    },
+    "./component": {
+      "types": "./dist/component.d.ts",
+      "import": "./dist/component.js"
     }
   },
   "files": [

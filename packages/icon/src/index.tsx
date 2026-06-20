@@ -1,15 +1,14 @@
-// @ts-nocheck
-import { Component, untrack, createEffect } from "solid-js";
-import * as icons from "lucide-solid";
+import { untrack, createEffect, type JSX } from "solid-js";
 import defaultLibrary from "./libraries/default";
 import { Dynamic } from "solid-js/web";
-import { create } from "lodash";
 import { lucideLibrary } from "./libraries/lucide";
 import {
   stylex,
   type StylexDefinition,
   mergeStylexDefinitions,
-} from "@stylex/solid";
+} from "@stylex3/solid";
+import { Props } from "@xcomponents2/shared/props";
+import { Component } from "@xcomponents2/shared/component";
 false && stylex;
 
 const libraries = {
@@ -36,11 +35,13 @@ export function IconConfig(config: {
         (libraries as Record<string, Record<string, string>>)[library] ||
         ({} as Record<string, string>);
       existing = { ...existing, ...value };
+      // @ts-ignore
       libraries[library as keyof IconConfigLibraries] =
         existing as IconConfigLibraries[keyof IconConfigLibraries];
     });
   }
   if (config.defaultLibrary) {
+    // @ts-ignore
     defautltLibraryName = config.defaultLibrary;
   }
 }
@@ -62,28 +63,32 @@ export type LibraryKeyUnion =
     }[keyof IconConfigLibraries]
   | (DefaultLibraryKeys & string);
 
-export type Props = Constructor;
+export type IconComponent = Component<
+  IconConstructor,
+  {},
+  {},
+  true,
+  typeof Icon
+>;
 
-export type Constructor = {
-  // ref?: (el: HTMLInputElement) => void;
+export type IconProps = Props<IconConstructor, {}, {}, true>;
+
+export type IconConstructor = {
   name: LibraryKeyUnion;
   size?: number;
   color?: string;
   "pt:root"?: StylexDefinition;
 };
 
-export default function Icon(p: Props) {
-  const props = untrack(() => p);
+export function Icon(props: IconProps): JSX.Element {
+  const { constructor } = props;
 
-  const constructor = {
-    ...({
-      size: 16,
-      color: "currentColor",
-    } satisfies Partial<Constructor>),
-    ...(props as Constructor),
+  const defaults = {
+    size: constructor.size ?? 16,
+    color: "currentColor",
   };
 
-  const [libraryKeyOrIconKey, iconKey] = props.name.split(":") as [
+  const [libraryKeyOrIconKey, iconKey] = constructor.name.split(":") as [
     string,
     string | undefined,
   ];
@@ -99,7 +104,7 @@ export default function Icon(p: Props) {
   }
 
   if (!icon) {
-    console.error(`Icon "${props.name}" not found in library"`);
+    console.error(`Icon "${constructor.name}" not found in library"`);
     icon = libraries["default"]["question-mark"];
   }
 
@@ -107,34 +112,41 @@ export default function Icon(p: Props) {
   if (result) {
     const { attributes, innerSvg } = result;
     return (
-      <Dynamic
+      <svg
         {...{
           ...(attributes && attributes),
         }}
-        component="svg"
-        width={constructor.size}
-        height={constructor.size}
-        color={constructor.color}
+        width={defaults.size}
+        height={defaults.size}
+        color={defaults.color}
         innerHTML={innerSvg}
-        ref={(el) => {
-          if (constructor["pt:root"]) {
-            // @ts-ignore
-            stylex(el as unknown as HTMLElement, () => constructor["pt:root"]);
-          }
-        }}
+        use:stylex={mergeStylexDefinitions(
+          {
+            width: `${defaults.size}px`,
+            height: `${defaults.size}px`,
+            color: defaults.color,
+            fill: "currentColor",
+            stroke: "currentColor",
+          },
+          constructor["pt:root"],
+        )}
       />
     );
   } else {
     return (
-      <Dynamic
-        component="span"
+      <span
         innerHTML={icon}
-        ref={(el) => {
-          if (constructor["pt:root"]) {
-            // @ts-ignore
-            stylex(el as unknown as HTMLElement, () => constructor["pt:root"]);
-          }
-        }}
+        use:stylex={mergeStylexDefinitions(
+          {
+            display: "inline-block",
+            width: `${defaults.size}px`,
+            height: `${defaults.size}px`,
+            color: defaults.color,
+            fill: "currentColor",
+            stroke: "currentColor",
+          },
+          constructor["pt:root"],
+        )}
       />
     );
   }
@@ -162,4 +174,12 @@ function parseSvg(
   }
 
   return { attributes, innerSvg };
+}
+
+declare module "solid-js" {
+  namespace JSX {
+    interface Directives {
+      stylex: StylexDefinition;
+    }
+  }
 }

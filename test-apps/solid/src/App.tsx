@@ -1,16 +1,40 @@
-import { Select } from "@xcomponents2/select";
-import { ToggleButton, Button } from "@xcomponents2/button";
 import { createSignal, Show } from "solid-js";
-// import { Transition } from "@xcomponents2/shared/transition";
 import { stylex, animate } from "@stylex3/solid";
+import { Segments } from "@xcomponents2/segments";
+import {
+  Button,
+  IconButton,
+  ToggleButton,
+  ToggleIconButton,
+} from "@xcomponents2/button";
 false && stylex;
 
 export default function App() {
-  const [rOpenedState, setrOpenedState] = createSignal(true);
-  return (<>
-    <ToggleButton label="Toggle" />    
-    <Button label="works" />
-  </>
+  let api: any; 
+  return (
+    <>
+      <Button
+        constructor={{
+          label: "Normal Button",
+        }}
+        api={(valu) => {
+          api = valu;
+          console.log("Button API:", valu);
+        }}
+        // @ts-ignore
+        events={{
+          onClick: (e) => {
+            console.log("Button clicked", e);
+          }
+        }}
+      />
+      <IconButton
+        constructor={{
+          icon: "lucide:apple",
+        }}
+      />
+
+      {/* <Segments options={[{ value: "1", label: "Option 1" }, { value: "2", label: "Option 2" }, { value: "3", label: "Option 3" }]} /> */}
+    </>
   );
 }
-

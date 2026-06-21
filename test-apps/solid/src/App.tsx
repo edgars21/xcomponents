@@ -14,41 +14,25 @@ export default function App() {
   let api: any;
   return (
     <>
-      <Button
-        constructor={{
-          label: "Normal Button",
-        }}
-      />
-      <IconButton
-        constructor={{
-          icon: "lucide:apple",
-        }}
-      />
-      <ToggleIconButton
-        constructor={{
-          icon: "lucide:apple",
-        }}
-        events={{
-          onToggle: (toggled) => {
-            console.log("ToggleIconButton toggled:", toggled);
-          },
-          onClick: (e) => {
-            console.log("ToggleIconButton clicked", e);
-          }
-        }}
-      />
-      <ToggleButton
-        constructor={{
-          label: "Toggle Normal Button",
-        }}
-      />
-      {/* {() => {
-        return Toggle(Button,
-          { constructor: { toggled: true }, events: {} },
-        );
-      }} */}
+      <ToggleButton constructor={{
+        label: "First toggle button",
+        startIcon: "lucide:home",
+      }} />
+      <ToggleIconButton constructor={{
+        icon: "lucide:apple",
+        
+      }} events={{
+        onToggle: (toggled) => {
+          console.log("toggle icon button toggled", toggled);
+        }
+      }} />
 
       {/* <Segments options={[{ value: "1", label: "Option 1" }, { value: "2", label: "Option 2" }, { value: "3", label: "Option 3" }]} /> */}
     </>
   );
+}
+
+
+export function Test(props: {constructor: { toggled: boolean; label: string }}) {
+  return <div>{props.constructor.label}</div>
 }

@@ -1,3 +1,4 @@
+import { splitProps, type JSX } from "solid-js";
 import {
   Props,
   type PropsConstructorType,
@@ -5,7 +6,8 @@ import {
   type PropsApiType,
 } from "@xcomponents2/shared/props";
 import { type Component } from "@xcomponents2/shared/component";
-import { type JSX } from "solid-js";
+import { stylex, mergeStylexDefinitions } from "@stylex/solid";
+false && stylex;
 
 export type ToggleProps = Props<
   ToggleConstructor,
@@ -36,18 +38,105 @@ export type ToggleInterface = {
   events: ToggleApi;
 };
 
+// export function Toggle<
+//   T extends ToggleProps,
+//   F extends (props: Props) => JSX.Element,
+// >(props: T, type: F): JSX.Element {
+//   const RenderedComponent = type;
+//   return RenderedComponent(props);
+// }
+
+type Exact<T, Shape> = T extends Shape ? (keyof T extends keyof Shape ? T : never) : never;
+
 export function Toggle<
-  T extends Component<
-    ToggleConstructor,
-    ToggleEvents,
-    ToggleApi,
-    true,
-    (props: ToggleProps) => JSX.Element
+  ExtraConstructor extends PropsConstructorType,
+  ExtraEvents extends PropsEventsType<"onClick">,
+  ExtraApi extends PropsApiType<{ element: HTMLElement }>,
+  T extends Props<
+    ExtraConstructor,
+    ExtraEvents,
+    ExtraApi,
+    true
   >,
+  F extends (props: T) => JSX.Element,
 >(
-  type: T["function"],
-  props: ToggleProps,
+  props: Exact<T, Props<
+    ToggleConstructor<ExtraConstructor>,
+    ToggleEvents<ExtraEvents>,
+    ToggleApi<ExtraApi>,
+    true
+  >>,
+  type: F
 ): JSX.Element {
+  const { constructor, events, api: setApi } = props;
+  const [localConstructor, forwardConstructor] = splitProps(constructor, [
+    "toggled",
+  ]);
+  const { onClick: extractedOnClick, ...forwardEvents } = events || {};
+  let componentApi: ExtraApi;
+
+  console.log("rendered toggle will forward these props constructor", forwardConstructor);
+
+  let toggled = localConstructor.toggled ?? false;
+
+  const api: ToggleApi = {
+    isToggled() {
+      return toggled;
+    },
+    toggle() {
+      toggled = !toggled;
+      setToggleAttributeOnElement(toggled);
+    },
+    setToggled(value: boolean) {
+      if (toggled !== value) {
+        toggled = value;
+        setToggleAttributeOnElement(toggled);
+      }
+    },
+  };
+
+  const eventHandlers: ToggleEvents = {
+    onToggle: (toggled: boolean) => {
+      events?.onToggle?.(toggled);
+    },
+  };
+
+  function setToggleAttributeOnElement(value: boolean) {
+    const element = componentApi.element;
+    if (value) {
+      element.setAttribute("toggled", "");
+    } else {
+      element.removeAttribute("toggled");
+    }
+  }
+
+  function customOnMount() {
+    setToggleAttributeOnElement(toggled);
+    setApi?.({ ...componentApi, ...api });
+  }
+
   const RenderedComponent = type;
-  return RenderedComponent(props);
+  return (
+    // @ts-ignore
+    <RenderedComponent
+      api={(api) => {
+        componentApi = api;
+        customOnMount();
+      }}
+      constructor={
+        forwardConstructor
+      }
+      events={{
+        ...forwardEvents,
+        onClick: (e: Event) => {
+          extractedOnClick?.(e);
+          const prevToggled = toggled;
+          api.toggle();
+          if (prevToggled !== toggled) {
+            eventHandlers.onToggle(toggled);
+          }
+        },
+      }}
+    />
+  );
 }

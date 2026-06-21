@@ -18,27 +18,35 @@ export default function App() {
         constructor={{
           label: "Normal Button",
         }}
-        api={(valu) => {
-          api = valu;
-          console.log("Button API:", valu);
-        }}
-        // @ts-ignore
-        events={{
-          onClick: (e) => {
-            console.log("Button clicked", e);
-          },
-        }}
       />
       <IconButton
         constructor={{
           icon: "lucide:apple",
         }}
       />
-      {() => {
+      <ToggleIconButton
+        constructor={{
+          icon: "lucide:apple",
+        }}
+        events={{
+          onToggle: (toggled) => {
+            console.log("ToggleIconButton toggled:", toggled);
+          },
+          onClick: (e) => {
+            console.log("ToggleIconButton clicked", e);
+          }
+        }}
+      />
+      <ToggleButton
+        constructor={{
+          label: "Toggle Normal Button",
+        }}
+      />
+      {/* {() => {
         return Toggle(Button,
           { constructor: { toggled: true }, events: {} },
         );
-      }}
+      }} */}
 
       {/* <Segments options={[{ value: "1", label: "Option 1" }, { value: "2", label: "Option 2" }, { value: "3", label: "Option 3" }]} /> */}
     </>

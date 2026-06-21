@@ -1,28 +1,35 @@
-import {
-  splitProps,
-  type JSX,
-} from "solid-js";
-import {
-  stylex,
-  mergeStylexDefinitions,
-} from "@stylex/solid";
+import { splitProps, type JSX } from "solid-js";
+import { stylex, mergeStylexDefinitions } from "@stylex/solid";
 import { type ToggleInterface } from "@xcomponents2/shared/toggleInterface";
 import * as Index from "./index";
 import { type Props } from "@xcomponents2/shared/props";
 
 false && stylex;
 
-export type ToggleButtonProps = Props<ToggleButtonConstructor, ToggleButtonEvents, ToggleButtonApi, true>;
-export type ToggleButtonConstructor = Index.ButtonConstructor & ToggleInterface["constructor"];
+export type ToggleButtonProps = Props<
+  ToggleButtonConstructor,
+  ToggleButtonEvents,
+  ToggleButtonApi,
+  true
+>;
+export type ToggleButtonConstructor = Index.ButtonConstructor &
+  ToggleInterface["constructor"];
 export type ToggleButtonEvents = Index.ButtonEvents & ToggleInterface["events"];
 export type ToggleButtonApi = Index.ButtonApi & ToggleInterface["api"];
 export function ToggleButton(props: ToggleButtonProps): JSX.Element {
   return ToggleButtonInterface("button", props);
 }
 
-export type ToggleIconButtonProps = Props<ToggleIconButtonConstructor, ToggleIconButtonEvents, ToggleIconButtonApi, true>;
-export type ToggleIconButtonConstructor = Index.IconButtonConstructor & ToggleInterface["constructor"];
-export type ToggleIconButtonEvents = Index.IconButtonEvents & ToggleInterface["events"];
+export type ToggleIconButtonProps = Props<
+  ToggleIconButtonConstructor,
+  ToggleIconButtonEvents,
+  ToggleIconButtonApi,
+  true
+>;
+export type ToggleIconButtonConstructor = Index.IconButtonConstructor &
+  ToggleInterface["constructor"];
+export type ToggleIconButtonEvents = Index.IconButtonEvents &
+  ToggleInterface["events"];
 export type ToggleIconButtonApi = Index.IconButtonApi & ToggleInterface["api"];
 export function ToggleIconButton(props: ToggleIconButtonProps): JSX.Element {
   return ToggleButtonInterface("icon-button", props);
@@ -42,6 +49,7 @@ function ToggleButtonInterface<T extends "button" | "icon-button">(
   type: T,
   props: ToggleInterfaceProps<T>,
 ): JSX.Element {
+  console.log("toggle props", props);
   const { constructor, events, api: setApi } = props;
 
   const [localConstructor, forwardConstructor] = splitProps(constructor, [
@@ -95,33 +103,37 @@ function ToggleButtonInterface<T extends "button" | "icon-button">(
   }
 
   const ToggleButton = type === "button" ? Index.Button : Index.IconButton;
+  console.log("ToggleButton: ", ToggleButton);
   return (
     <ToggleButton
       api={(api: Index.ButtonApi | Index.IconButtonApi) => {
         buttonOrIconButtonApi = api;
         customOnMount();
       }}
-      onClick={(e: Event) => {
-        extractedOnClick?.(e);
-        const prevToggled = toggled;
-        api.toggle();
-        if (prevToggled !== toggled) {
-          eventHandlers.onToggle(toggled);
-        }
+      // @ts-ignore
+      constructor={{
+        ...forwardConstructorWithoutExtracted,
+        "pt:root": mergeStylexDefinitions(
+          {
+            [Symbol("backgroundColor")]: [
+              ["@toggled&:hover", "darkBlue"],
+              ["@toggled", "blue"],
+            ],
+          },
+          extractedPtRoot,
+        ),
       }}
-      pt:root={mergeStylexDefinitions(
-        {
-          [Symbol("backgroundColor")]: [
-            ["@toggled&:hover", "darkBlue"],
-            ["@toggled", "blue"],
-          ],
+      events={{
+        ...forwardEvents,
+        onClick: (e: Event) => {
+          extractedOnClick?.(e);
+          const prevToggled = toggled;
+          api.toggle();
+          if (prevToggled !== toggled) {
+            eventHandlers.onToggle(toggled);
+          }
         },
-        extractedPtRoot,
-      )}
-      // @ts-ignore
-      constructor={forwardConstructorWithoutExtracted}
-      // @ts-ignore
-      events={forwardEvents}
+      }}
     />
   );
 }

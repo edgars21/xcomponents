@@ -90,6 +90,20 @@ export function IconButton(props: IconButtonProps): JSX.Element {
     },
   };
 
+  const eventHandlers: IconButtonEvents = {
+    onClick: (e: Event) => {
+      events?.onClick?.(e);
+    },
+    onFocus: (e: Event) => {
+      api.focus();
+      events?.onFocus?.(e);
+    },
+    onBlur: (e: Event) => {
+      api.blur();
+      events?.onBlur?.(e);
+    },
+  };
+
   onMount(() => {
     setApi?.(api);
   });
@@ -117,6 +131,9 @@ export function IconButton(props: IconButtonProps): JSX.Element {
         ...(rDisabledState() && { disabled: true }),
         ...(rLoadinState() && { loading: true }),
       }}
+      onClick={eventHandlers.onClick}
+      onFocus={eventHandlers.onFocus}
+      onBlur={eventHandlers.onBlur}
     >
       <div
         use:stylex={mergeStylexDefinitions(

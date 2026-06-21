@@ -1,39 +1,44 @@
+import { ToggleInterface } from "@xcomponents2/shared/toggleInterface";
+import { Props } from "@xcomponents2/shared/props";
+import { Component } from "@xcomponents2/shared/component";
+import { type ButtonComponent } from "@xcomponents2/button";
+import { type JSX, onMount, createSignal, Show, createMemo } from "solid-js";
+
+export type MenuItemsProps<T extends ButtonComponent> = Props<
+  MenuItemConstructor<T>,
+  MenuItemEvents<T>,
+  MenuItemApi<T>,
+  true
+>;
+
+type MenuItemConstructor<T extends ButtonComponent> = {
+  type: T;
+} & T["constructor"] &
+  ToggleInterface["constructor"];
+
+type MenuItemEvents<T extends ButtonComponent> = {
+  type: T;
+} & T["events"] & Record<string, (...args: any[]) => void> &
+  ToggleInterface["events"];
 
 
-import { ToggleInterfaceComponent } from "@xcomponents2/shared/toggleInterface";
-import {Props} from "@xcomponents2/shared/props";
-import {Component} from "@xcomponents2/shared/component";
-import {
-  type JSX,
-  onMount,
-  createSignal,
-  Show,
-  createMemo,
-} from "solid-js";
+type MenuItemApi<T extends ButtonComponent> = {
+  type: T;
+} & T["api"] &
+  ToggleInterface["api"];
 
 
-export type MenuItemsProps = Props<MenuItemConstructor, MenuItemEvents, MenuItemApi, true>; 
+export function MenuItem<T extends ButtonComponent>(
+  props: MenuItemsProps<T>,
+): JSX.Element {
+  const { constructor, events, api: setApi } = props;
 
-type MenuItemConstructor = {
-    type: Component<> 
-} & ToggleInterfaceComponent["constructor"];
-
-
-type MenuItemEvents = {
-} & ToggleInterfaceComponent["events"];
-
-type MenuItemApi = {
-} & ToggleInterfaceComponent["api"];
-
-export function MenuItem(props: MenuItemsProps): JSX.Element {
-  const {constructor, events, api: setApi} = props;
-
-  const {type, ...forwardConstructor} = constructor;
+  const { type, ...forwardConstructor } = constructor;
 
   let selected: boolean = constructor?.toggled ?? false;
   const [rSelectedState, setRSelectedState] = createSignal(selected);
 
-  const api: MenuItemApi = {
+  const api: MenuItemApi<T> = {
     setToggled(value: boolean) {
       selected = value;
       setRSelectedState(value);
@@ -55,15 +60,15 @@ export function MenuItem(props: MenuItemsProps): JSX.Element {
 
   return (
     <Show when={refreshKey()} keyed>
-        {type.function({
-            constructor: forwardConstructor,
-            events: {
-                onToggle: (toggled: boolean) => {
-                    api.setToggled(toggled);
-                    events?.onToggle?.(toggled);
-                } 
-            }
-        })}
+      {type.function({
+        constructor: forwardConstructor,
+        events: {
+          onToggle: (toggled: boolean) => {
+            api.setToggled(toggled);
+            events?.onToggle?.(toggled);
+          },
+        },
+      })}
     </Show>
   );
 }

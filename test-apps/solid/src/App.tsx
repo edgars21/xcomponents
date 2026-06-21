@@ -7,10 +7,11 @@ import {
   ToggleButton,
   ToggleIconButton,
 } from "@xcomponents2/button";
+import { Toggle } from "@xcomponents2/toggle";
 false && stylex;
 
 export default function App() {
-  let api: any; 
+  let api: any;
   return (
     <>
       <Button
@@ -25,7 +26,7 @@ export default function App() {
         events={{
           onClick: (e) => {
             console.log("Button clicked", e);
-          }
+          },
         }}
       />
       <IconButton
@@ -33,6 +34,11 @@ export default function App() {
           icon: "lucide:apple",
         }}
       />
+      {() => {
+        return Toggle(Button,
+          { constructor: { toggled: true }, events: {} },
+        );
+      }}
 
       {/* <Segments options={[{ value: "1", label: "Option 1" }, { value: "2", label: "Option 2" }, { value: "3", label: "Option 3" }]} /> */}
     </>

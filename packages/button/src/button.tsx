@@ -6,23 +6,16 @@ import {
   type StylexDefinition,
   mergeStylexDefinitions,
 } from "@stylex/solid";
-import { type Component } from "@xcomponents2/shared/component";
-import { Props } from "@xcomponents2/shared/props";
+import { type ComponentInterface, type ComponentProps, splitComponentProps } from "@xcomponents2/shared/component";
 false && stylex;
 
-export type ButtonComponent = Component<
-  ButtonConstructor,
-  ButtonEvents,
-  ButtonApi,
-  true,
-  typeof Button
->;
 
-export type ButtonProps = Props<
+export type ButtonProps = ComponentProps<ButtonInterface>;
+
+export type ButtonInterface = ComponentInterface<
   ButtonConstructor,
   ButtonEvents,
-  ButtonApi,
-  true
+  ButtonApi
 >;
 
 export type ButtonConstructor = {
@@ -43,7 +36,7 @@ export type ButtonEvents = {
 };
 
 export type ButtonApi = {
-  element: HTMLButtonElement;
+  "pt:root": HTMLButtonElement;
   setDisabled: (state: boolean) => void;
   setLoading: (state: boolean) => void;
   isDisabled: boolean;
@@ -53,10 +46,11 @@ export type ButtonApi = {
   blur: () => void;
 };
 
-export function Button(props: ButtonProps): JSX.Element {
-  let rootElement: HTMLButtonElement;
 
-  const { constructor, events, api: setApi } = props;
+export function Button(props: ButtonProps): JSX.Element {
+  const { constructor, events, setApi } = splitComponentProps<ButtonInterface>(props);
+
+  let rootElement: HTMLButtonElement;
 
   let loading = false;
   let disabled = false;
@@ -69,7 +63,7 @@ export function Button(props: ButtonProps): JSX.Element {
   const [rFocusedState, setrFocusedState] = createSignal(focused);
 
   const api: ButtonApi = {
-    get element() {
+    get "pt:root"() {
       return rootElement!;
     },
     setDisabled(state) {

@@ -1,36 +1,66 @@
-import { splitProps, type JSX } from "solid-js";
+import { splitProps, type JSX, onMount } from "solid-js";
 import { stylex, mergeStylexDefinitions } from "@stylex/solid";
 import { type ToggleInterface } from "@xcomponents2/shared/toggleInterface";
 import * as Index from "./index";
-import { type Props } from "@xcomponents2/shared/props";
 import {
   Toggle,
   type ToggleConstructor,
   type ToggleEvents,
   type ToggleApi,
 } from "@xcomponents2/toggle";
-
+import {
+  type ComponentInterface,
+  type ComponentProps,
+  splitComponentProps,
+} from "@xcomponents2/shared/component";
 false && stylex;
 
-export type ToggleButtonProps = Props<
+export type ToggleButtonProps = ComponentProps<ToggleButtonInterface>;
+export type ToggleButtonInterface = ComponentInterface<
   ToggleButtonConstructor,
   ToggleButtonEvents,
-  ToggleButtonApi,
-  true
+  ToggleButtonApi
 >;
-export type ToggleButtonConstructor = ToggleConstructor<Index.ButtonConstructor>;
-export type ToggleButtonEvents = ToggleEvents<Index.ButtonEvents>;
-export type ToggleButtonApi = ToggleApi<Index.ButtonApi>;
+export type ToggleButtonConstructor = Index.ButtonConstructor &
+  ToggleConstructor;
+export type ToggleButtonEvents = Index.ButtonEvents & ToggleEvents;
+export type ToggleButtonApi = Index.ButtonApi & ToggleApi;
 export function ToggleButton(props: ToggleButtonProps): JSX.Element {
+  const { constructor, events, setApi } =
+    splitComponentProps<ToggleButtonInterface>(props);
+  const [toggleConstructor, buttonConstructor] = splitProps(constructor, [
+    "toggled",
+  ]);
+  const [toggleEvents, buttonEvents] = splitProps(events, ["onToggle"]);
   const {
-    constructor: { "pt:root": extractedPtRoot, ...forwardConstructor },
-    ...forwardPropsEventsAndApi
-  } = props;
+    "pt:root": extractedButtonPtRoot,
+    ...forwardButtonConstructorWithoutExtract
+  } = buttonConstructor;
+  let toggleApi: ToggleApi;
+  let buttonApi: Index.ButtonApi;
 
-  return Toggle(
-    {
-      constructor: {
-        ...forwardConstructor,
+  function customOnMount() {
+    if (setApi) {
+      if (toggleApi && buttonApi) {
+        setApi({ ...toggleApi, ...buttonApi });
+      }
+    }
+  }
+
+  return Toggle({
+    ...toggleConstructor,
+    ...toggleEvents,
+    api: (api) => {
+      toggleApi = api;
+      customOnMount();
+    },
+    child: {
+      function: Index.Button as (
+        componentProps: ComponentProps<Index.ButtonInterface>,
+      ) => JSX.Element,
+      props: {
+        ...forwardButtonConstructorWithoutExtract,
+        ...buttonEvents,
         "pt:root": mergeStylexDefinitions(
           {
             [Symbol("backgroundColor")]: [
@@ -38,36 +68,63 @@ export function ToggleButton(props: ToggleButtonProps): JSX.Element {
               ["@toggled", "blue"],
             ],
           },
-          extractedPtRoot,
+          extractedButtonPtRoot,
         ),
+        api: (api) => {
+          buttonApi = api;
+          customOnMount();
+        },
       },
-      events: forwardPropsEventsAndApi.events,
-      // @ts-ignore
-      api: forwardPropsEventsAndApi.api,
     },
-    Index.Button,
-  );
+  });
 }
 
-export type ToggleIconButtonProps = Props<
+export type ToggleIconButtonProps = ComponentProps<ToggleIconButtonInterface>;
+export type ToggleIconButtonInterface = ComponentInterface<
   ToggleIconButtonConstructor,
   ToggleIconButtonEvents,
-  ToggleIconButtonApi,
-  true
+  ToggleIconButtonApi
 >;
-export type ToggleIconButtonConstructor = ToggleConstructor<Index.IconButtonConstructor>;
-export type ToggleIconButtonEvents = ToggleEvents<Index.IconButtonEvents>;
-export type ToggleIconButtonApi = ToggleApi<Index.IconButtonApi>;
+export type ToggleIconButtonConstructor = Index.IconButtonConstructor &
+  ToggleConstructor;
+export type ToggleIconButtonEvents = Index.IconButtonEvents & ToggleEvents;
+export type ToggleIconButtonApi = Index.IconButtonApi & ToggleApi;
 export function ToggleIconButton(props: ToggleIconButtonProps): JSX.Element {
+  const { constructor, events, setApi } =
+    splitComponentProps<ToggleIconButtonInterface>(props);
+  const [toggleConstructor, buttonConstructor] = splitProps(constructor, [
+    "toggled",
+  ]);
+  const [toggleEvents, buttonEvents] = splitProps(events, ["onToggle"]);
   const {
-    constructor: { "pt:root": extractedPtRoot, ...forwardConstructor },
-    ...forwardPropsEventsAndApi
-  } = props;
+    "pt:root": extractedButtonPtRoot,
+    ...forwardButtonConstructorWithoutExtract
+  } = buttonConstructor;
+  let toggleApi: ToggleApi;
+  let buttonApi: Index.IconButtonApi;
 
-  return Toggle(
-    {
-      constructor: {
-        ...forwardConstructor,
+  function customOnMount() {
+    if (setApi) {
+      if (toggleApi && buttonApi) {
+        setApi({ ...toggleApi, ...buttonApi });
+      }
+    }
+  }
+
+  return Toggle({
+    ...toggleConstructor,
+    ...toggleEvents,
+    api: (api) => {
+      toggleApi = api;
+      customOnMount();
+    },
+    child: {
+      function: Index.IconButton as (
+        componentProps: ComponentProps<Index.IconButtonInterface>,
+      ) => JSX.Element,
+      props: {
+        ...forwardButtonConstructorWithoutExtract,
+        ...buttonEvents,
         "pt:root": mergeStylexDefinitions(
           {
             [Symbol("backgroundColor")]: [
@@ -75,13 +132,13 @@ export function ToggleIconButton(props: ToggleIconButtonProps): JSX.Element {
               ["@toggled", "blue"],
             ],
           },
-          extractedPtRoot,
+          extractedButtonPtRoot,
         ),
+        api: (api) => {
+          buttonApi = api;
+          customOnMount();
+        },
       },
-      events: forwardPropsEventsAndApi.events,
-      // @ts-ignore
-      api: forwardPropsEventsAndApi.api,
     },
-    Index.IconButton,
-  );
+  });
 }

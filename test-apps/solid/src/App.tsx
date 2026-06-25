@@ -5,34 +5,65 @@ import {
   Button,
   IconButton,
   ToggleButton,
+  type ToggleButtonProps,
   ToggleIconButton,
+  type ButtonProps,
 } from "@xcomponents2/button";
-import { Toggle } from "@xcomponents2/toggle";
+import { Toggle, type ToggleProps } from "@xcomponents2/toggle";
+import { MultiSelectItem } from "@xcomponents2/multi-select";
 false && stylex;
 
 export default function App() {
-  let api: any;
+  return [
+    Button({
+      label: "Test",
+    }),
+    IconButton({
+      icon: "lucide:apple",
+    }),
+    ToggleButton({
+      label: "Toggle Test",
+    }),
+    ToggleIconButton({
+      icon: "lucide:apple",
+    }),
+  ];
+}
+
+export function AppJsx() {
   return (
     <>
-      <ToggleButton constructor={{
-        label: "First toggle button",
-        startIcon: "lucide:home",
-      }} />
-      <ToggleIconButton constructor={{
-        icon: "lucide:apple",
-        
-      }} events={{
-        onToggle: (toggled) => {
-          console.log("toggle icon button toggled", toggled);
-        }
-      }} />
-
-      {/* <Segments options={[{ value: "1", label: "Option 1" }, { value: "2", label: "Option 2" }, { value: "3", label: "Option 3" }]} /> */}
+      <Button label="Test" />
+      <Button label="Test" />
     </>
   );
 }
 
+// export default function App() {
+//   return [
+//     Button({
+//       label: "Test",
+//     }),
+//     Button({
+//       label: "Second Test",
+//     }),
+//   ];
+//   // <>
+//   //   {/* <MultiSelectItem<ToggleButtonProps>
+//   //     constructor={{
+//   //       component: {
+//   //         function: ToggleButton,
+//   //         constructor: { toggled: true, label: "Test" },
+//   //       },
+//   //     }}
+//   //   /> */}
 
-export function Test(props: {constructor: { toggled: boolean; label: string }}) {
-  return <div>{props.constructor.label}</div>
+//   //   {/* <Segments options={[{ value: "1", label: "Option 1" }, { value: "2", label: "Option 2" }, { value: "3", label: "Option 3" }]} /> */}
+//   // </>
+// }
+
+export function Test(props: {
+  constructor: { toggled: boolean; label: string };
+}) {
+  return <div>{props.constructor.label}</div>;
 }

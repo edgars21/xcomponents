@@ -6,23 +6,15 @@ import {
   type StylexDefinition,
   mergeStylexDefinitions,
 } from "@stylex/solid";
-import { type Component } from "@xcomponents2/shared/component";
-import { Props } from "@xcomponents2/shared/props";
+import { type ComponentInterface, type ComponentProps, splitComponentProps } from "@xcomponents2/shared/component";
 false && stylex;
 
-export type IconButtonComponent = Component<
-  IconButtonConstructor,
-  IconButtonEvents,
-  IconButtonApi,
-  true,
-  typeof IconButton
->;
+export type IconButtonProps = ComponentProps<IconButtonInterface>;
 
-export type IconButtonProps = Props<
+export type IconButtonInterface = ComponentInterface<
   IconButtonConstructor,
   IconButtonEvents,
-  IconButtonApi,
-  true
+  IconButtonApi
 >;
 
 export type IconButtonConstructor = {
@@ -38,7 +30,7 @@ export type IconButtonEvents = {
 };
 
 export type IconButtonApi = {
-  element: HTMLButtonElement;
+  "pt:root": HTMLButtonElement;
   setDisabled: (state: boolean) => void;
   setLoading: (state: boolean) => void;
   isDisabled: boolean;
@@ -48,7 +40,7 @@ export type IconButtonApi = {
 };
 
 export function IconButton(props: IconButtonProps): JSX.Element {
-  const { constructor, events, api: setApi } = props;
+  const { constructor, events, setApi } = splitComponentProps<IconButtonInterface>(props);
 
   let rootElement: HTMLButtonElement;
 
@@ -61,7 +53,7 @@ export function IconButton(props: IconButtonProps): JSX.Element {
   const [rFocusedState, setrFocusedState] = createSignal(focused);
 
   const api: IconButtonApi = {
-    get element() {
+    get "pt:root"() {
       return rootElement!;
     },
     setDisabled(state) {

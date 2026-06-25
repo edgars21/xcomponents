@@ -7,8 +7,7 @@ import {
   type StylexDefinition,
   mergeStylexDefinitions,
 } from "@stylex3/solid";
-import { Props } from "@xcomponents2/shared/props";
-import { Component } from "@xcomponents2/shared/component";
+import {type ComponentProps, type ComponentInterface, splitComponentProps} from "@xcomponents2/shared/component";
 false && stylex;
 
 const libraries = {
@@ -63,15 +62,16 @@ export type LibraryKeyUnion =
     }[keyof IconConfigLibraries]
   | (DefaultLibraryKeys & string);
 
-export type IconComponent = Component<
-  IconConstructor,
-  {},
-  {},
-  true,
-  typeof Icon
->;
+// export type IconComponent = Component<
+//   IconConstructor,
+//   {},
+//   {},
+//   true,
+//   typeof Icon
+// >;
 
-export type IconProps = Props<IconConstructor, {}, {}, true>;
+export type IconProps = ComponentProps<IconInterface>;
+export type IconInterface = ComponentInterface<IconConstructor, {}, {}>;
 
 export type IconConstructor = {
   name: LibraryKeyUnion;
@@ -81,7 +81,7 @@ export type IconConstructor = {
 };
 
 export function Icon(props: IconProps): JSX.Element {
-  const { constructor } = props;
+  const { constructor, events, setApi } = splitComponentProps<IconInterface>(props);
 
   const defaults = {
     size: constructor.size ?? 16,

@@ -15,7 +15,7 @@
     "@xcomponents2/progress-circle": "^0.1.0",
     "@xcomponents2/icon": "^0.1.0",
     "@xcomponents2/shared": "^0.1.0",
-    "@xcomponents2/button": "^0.1.0"
+    "@xcomponents2/multi-select": "^0.1.0"
   },
   "devDependencies": {
     "esbuild-plugin-solid": "^0.6.0",

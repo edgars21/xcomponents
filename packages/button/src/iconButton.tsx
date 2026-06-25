@@ -6,7 +6,11 @@ import {
   type StylexDefinition,
   mergeStylexDefinitions,
 } from "@stylex/solid";
-import { type ComponentInterface, type ComponentProps, splitComponentProps } from "@xcomponents2/shared/component";
+import {
+  type ComponentInterface,
+  type ComponentProps,
+  splitComponentProps,
+} from "@xcomponents2/shared/component";
 false && stylex;
 
 export type IconButtonProps = ComponentProps<IconButtonInterface>;
@@ -40,7 +44,8 @@ export type IconButtonApi = {
 };
 
 export function IconButton(props: IconButtonProps): JSX.Element {
-  const { constructor, events, setApi } = splitComponentProps<IconButtonInterface>(props);
+  const { constructor, events, setApi } =
+    splitComponentProps<IconButtonInterface>(props);
 
   let rootElement: HTMLButtonElement;
 
@@ -140,11 +145,14 @@ export function IconButton(props: IconButtonProps): JSX.Element {
           constructor["pt:container"],
         )}
       >
-        <Icon
-          {...(typeof constructor.icon === "string"
-            ? { constructor: { name: constructor.icon } }
-            : constructor.icon)}
-        />
+        {
+          // @ts-ignore
+          <Icon
+            {...(typeof constructor.icon === "string"
+              ? { name: constructor.icon }
+              : constructor.icon)}
+          />
+        }
         <Show when={rLoadinState()}>
           <ProgressCircle
             stylex={{

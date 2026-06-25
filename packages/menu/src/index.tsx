@@ -37,9 +37,6 @@ export type MenuConstructor = {
   "pt:item"?: ButtonProps;
 };
 
-
-
-
 export type MenuEvents = {
   onSelect: (value: string) => void;
 };

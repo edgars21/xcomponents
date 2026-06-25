@@ -1,71 +1,43 @@
-import { ToggleInterface } from "@xcomponents2/shared/toggleInterface";
-import { Props } from "@xcomponents2/shared/props";
-import { Component } from "@xcomponents2/shared/component";
-import { Icon } from "@xcomponents2/icon";
-import {
-  Button,
-  type ButtonProps,
-  type ButtonConstructor,
-  type ButtonEvents,
-  type ButtonApi,
-  ToggleButton,
-} from "@xcomponents2/button";
 import { type JSX, onMount, createSignal, Show, createMemo } from "solid-js";
-import { type ToggleProps, type ToggleApi } from "@xcomponents2/toggle";
-import { ComponentCallback, type GetComponentInterface, type GetComponentInterfaceFromProps } from "@xcomponents2/shared/component";
-type Resolve<T> = T extends object ? { [K in keyof T]: T[K] } : T;
+import { type ToggleApi, ToggleInterface } from "@xcomponents2/toggle";
+import {
+  type ComponentInterface,
+  type CallableComponent,
+  type ComponentProps,
+  splitComponentProps,
+} from "@xcomponents2/shared/component";
 
-
-type CombinedToggleButtonComponent = GetComponentInterface<typeof ToggleButton>;
-
-
-type ButtonComponent = GetComponentInterface<typeof Button>;
-type ToggleComponent = GetComponentInterfaceFromProps<ToggleProps>;
-
-type TogglableButtonComponent = ButtonComponent & ToggleComponent;
-type TogglableButtonComponent2 = Resolve<ToggleComponent & Resolve<ButtonComponent>>;
-
-
-const test: ToggleComponent =  {} as CombinedToggleButtonComponent
-
-export type MultiSelectItemProps<T extends ToggleProps> = Props<
+export type MultiSelectItemProps<T extends ToggleInterface> = {
+  component: CallableComponent<T>;
+} & ComponentProps<MultiSelectItemInterface<T>>;
+export type MultiSelectItemInterface<
+  T extends ToggleInterface = ToggleInterface,
+> = ComponentInterface<
   MultiSelectItemConstructor<T>,
   MultiSelectItemEvents,
-  MultiSelectItemApi,
-  true
+  MultiSelectItemApi
 >;
-
-
-
-type MultiSelectItemConstructor<T extends ToggleProps> = {
+export type MultiSelectItemConstructor<T extends ToggleInterface> = {
   selected?: boolean;
-  component: ComponentCallback<T>;
+  selectedStateConstructor?: Partial<T["constructor"]>;
 };
-
-type MultiSelectItemEvents = {
-  onSelect: (selected: boolean) => void;
+export type MultiSelectItemEvents = {
+  onSelect: () => void;
 };
-type MultiSelectItemApi = {
+export type MultiSelectItemApi = {
   setSelected: (selected: boolean) => void;
   isSelected: () => boolean;
 };
 
-export function MultiSelectItem<T extends ToggleProps>(
+export function MultiSelectItem<T extends ToggleInterface>(
   props: MultiSelectItemProps<T>,
 ): JSX.Element {
-  const { constructor, events, api: setApi } = props;
-  constructor.component.constructor.toggled = constructor.selected;
-
+  const { constructor, events, setApi } =
+    splitComponentProps<MultiSelectItemInterface<T>>(props);
+  props.component.props.toggled = constructor.selected;
   let toggleApi: ToggleApi;
 
   const [rRefreshCompnent, setrRefreshCompnent] = createSignal(1);
-
-  const {
-    component: {
-      events: { onToggle: extractedComponentOnToggleEvent } = {},
-      ...forwardComponentConstructortAndApi
-    },
-  } = constructor;
 
   let api: MultiSelectItemApi = {
     setSelected: (selected: boolean) => {
@@ -75,33 +47,30 @@ export function MultiSelectItem<T extends ToggleProps>(
   };
 
   const eventHandlers: MultiSelectItemEvents = {
-    onSelect: (selected: boolean) => {
-      events?.onSelect?.(selected);
+    onSelect: () => {
+      events?.onSelect?.();
     },
   };
 
-  function customOnMount() {
+  onMount(() => {
     setApi?.(api);
-  }
+  });
 
   return (
     <Show when={rRefreshCompnent()} keyed>
-      {(
-        constructor.component
-          .function as ComponentCallback<ToggleProps>["function"]
-      )({
+      {props.component.function({
+        ...props.component.props,
         api: (api) => {
           toggleApi = api;
-          forwardComponentConstructortAndApi.api?.(api);
-          customOnMount();
+          props.component.props.api?.(api);
         },
-        constructor: forwardComponentConstructortAndApi.constructor,
-        events: {
-          onToggle: (toggled: boolean) => {
-            setrRefreshCompnent((prev) => prev + 1);
-            extractedComponentOnToggleEvent?.(toggled);
-            eventHandlers.onSelect(toggled);
-          },
+        onToggle: (state: boolean) => {
+          if (toggleApi.isToggled() === false) {
+            toggleApi.setToggled(true);
+          } else {
+            props.component.props.onToggle?.(state);
+            eventHandlers.onSelect();
+          }
         },
       })}
     </Show>

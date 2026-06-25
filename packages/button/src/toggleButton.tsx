@@ -1,6 +1,5 @@
 import { splitProps, type JSX, onMount } from "solid-js";
 import { stylex, mergeStylexDefinitions } from "@stylex/solid";
-import { type ToggleInterface } from "@xcomponents2/shared/toggleInterface";
 import * as Index from "./index";
 import {
   Toggle,

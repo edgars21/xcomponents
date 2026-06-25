@@ -6,9 +6,12 @@ import {
   type StylexDefinition,
   mergeStylexDefinitions,
 } from "@stylex/solid";
-import { type ComponentInterface, type ComponentProps, splitComponentProps } from "@xcomponents2/shared/component";
+import {
+  type ComponentInterface,
+  type ComponentProps,
+  splitComponentProps,
+} from "@xcomponents2/shared/component";
 false && stylex;
-
 
 export type ButtonProps = ComponentProps<ButtonInterface>;
 
@@ -46,9 +49,9 @@ export type ButtonApi = {
   blur: () => void;
 };
 
-
 export function Button(props: ButtonProps): JSX.Element {
-  const { constructor, events, setApi } = splitComponentProps<ButtonInterface>(props);
+  const { constructor, events, setApi } =
+    splitComponentProps<ButtonInterface>(props);
 
   let rootElement: HTMLButtonElement;
 
@@ -161,17 +164,19 @@ export function Button(props: ButtonProps): JSX.Element {
         ></div>
         {constructor.startSlot}
         {constructor.startIcon && (
+          // @ts-ignore
           <Icon
             {...(typeof constructor.startIcon === "string"
-              ? { constructor: { name: constructor.startIcon } }
+              ? { name: constructor.startIcon }
               : constructor.startIcon)}
           />
         )}
         <div use:stylex={constructor["pt:label"]}>{rLabelState()}</div>
         {constructor.endIcon && (
+          // @ts-ignore
           <Icon
             {...(typeof constructor.endIcon === "string"
-              ? { constructor: { name: constructor.endIcon } }
+              ? { name: constructor.endIcon } 
               : constructor.endIcon)}
           />
         )}

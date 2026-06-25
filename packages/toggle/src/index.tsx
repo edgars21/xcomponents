@@ -1,5 +1,4 @@
 import { type JSX, onMount } from "solid-js";
-import {} from "@xcomponents2/shared/props";
 import { stylex, mergeStylexDefinitions } from "@stylex/solid";
 import {
   type ComponentInterface,

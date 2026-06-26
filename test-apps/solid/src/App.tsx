@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js";
 import { stylex, animate } from "@stylex3/solid";
-import { Segments } from "@xcomponents2/segments";
+import { ButtonSegments, IconButtonSegments } from "@xcomponents2/segments";
 import {
   Button,
   IconButton,
@@ -23,17 +23,29 @@ type test1 = ComponentProps<ToggleButtonInterface>;
 
 export default function App() {
   return [
-    Segments({
+    ButtonSegments({
       options: [
-        { value: "1", label: "Option 1", "pt:item": { label: "Option 1" } },
+        { value: "1", label: "Option 1", "pt:item": { label: "Option 1", startIcon: "lucide:apple" } },
         { value: "2", label: "Option 2", "pt:item": { label: "Option 2" }},
         { value: "3", label: "Option 3", "pt:item": { label: "Option 3" }},
       ],
       "pt:item": {
-        function: ToggleButton,
-        props: { label: "Test" },
+         label: "Test" ,
       },
     }),
+    (() => {return <br />})(),
+    IconButtonSegments({
+      options: [
+        { value: "1", label: "Option 1", "pt:item": {icon: "lucide:apple"} },
+        { value: "2", label: "Option 2", "pt:item": {icon: "lucide:banana"}},
+        { value: "3", label: "Option 3", "pt:item": {icon: "lucide:cherry"}},
+      ],
+      "pt:item": {
+        icon: "empty",
+      }
+    }),
+
+
     // MultiSelect<ToggleButtonInterface>({
     //   options: [
     //     { value: "1", label: "Option 1", "pt:item": { label: "Option 1" } },

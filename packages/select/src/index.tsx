@@ -4,16 +4,13 @@ import {
   onMount,
   createSignal,
   Show,
-  Component,
 } from "solid-js";
-import { Dynamic } from "solid-js/web";
-import Icon, { type Props as IconProps } from "@xcomponents2/icon";
+import {  type  IconProps } from "@xcomponents2/icon";
 import ProgressCircle from "@xcomponents2/progress-circle";
 import {
   stylex,
   type StylexDefinition,
   mergeStylexDefinitions,
-  animate,
 } from "@stylex3/solid";
 import {
   Button,
@@ -71,7 +68,6 @@ export interface Api {
   close: () => void;
   toggleOpen: () => void;
 }
-
 
 enum InputType {
   Text = "text",
@@ -245,6 +241,7 @@ export function Select(props: SelectProps): JSX.Element {
           {...(constructor.trigger && { ...constructor.trigger })}
           onClick={(e) => {
             if (clearButtonElement) {
+              // @ts-ignore
               if (!clearButtonElement!.contains(e.target)) {
                 api.toggleOpen();
               }
@@ -274,7 +271,11 @@ export function Select(props: SelectProps): JSX.Element {
                     api.setValue(null);
                     menu.setSelected(null);
                     // @ts-ignore
-                    onChange?.({ target: { inputElement },currentTarget: { inputElement }, value: null } as any);
+                    onChange?.({
+                      target: { inputElement },
+                      currentTarget: { inputElement },
+                      value: null,
+                    } as any);
                   }}
                 />
               </Show>
@@ -320,7 +321,11 @@ export function Select(props: SelectProps): JSX.Element {
               api.setValue(value);
               api.close();
               // @ts-ignore
-              onChange?.({ target: { inputElement },currentTarget: { inputElement }, value: value } as any);
+              onChange?.({
+                target: { inputElement },
+                currentTarget: { inputElement },
+                value: value,
+              } as any);
             }}
             pt:root={{
               backgroundColor: "#1E1E1E",
@@ -336,7 +341,7 @@ export function Select(props: SelectProps): JSX.Element {
                 height: "24px",
                 color: "#fff",
                 fontSize: "12px",
-                borderRadius: "5px"
+                borderRadius: "5px",
               },
             }}
           />

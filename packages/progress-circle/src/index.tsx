@@ -1,10 +1,13 @@
-// ProgressCircle.tsx
-import { Component, JSX, createMemo, splitProps, Show } from "solid-js";
-import { stylex, type StyleXValidSolidType } from "@stylex/solid";
+import { type Component, type JSX, createMemo, splitProps, Show } from "solid-js";
+import {
+  stylex,
+  type StylexDefinition,
+  mergeStylexDefinitions,
+} from "@stylex3/solid";
 false && stylex;
 
 type Props = {
-  stylex?: StyleXValidSolidType;
+  stylex?: StylexDefinition;
   /** 0–100; omit or set `indeterminate: true` for spinner mode */
   value?: number;
   /** Diameter in px */
@@ -32,6 +35,14 @@ type Props = {
   /** Optional title (tooltip) */
   title?: string;
 };
+
+declare module "solid-js" {
+  namespace JSX {
+    interface Directives {
+      stylex: StylexDefinition;
+    }
+  }
+}
 
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
@@ -86,13 +97,12 @@ const ProgressCircle: Component<Props> = (allProps) => {
 
   return (
     <div
-      use:stylex={{
+      use:stylex={mergeStylexDefinitions({
         position: "relative",
         display: "inline-block",
         width: `${size()}px` as string,
         height: `${size()}px` as string,
-        ...props.stylex,
-      }}
+      }, props.stylex)}
       title={props.title}
       {...ariaProps()}
     >

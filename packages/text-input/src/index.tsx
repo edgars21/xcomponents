@@ -7,7 +7,7 @@ import {
   Component,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import Icon, { type Props as IconProps } from "@xcomponents2/icon";
+import {Icon, IconProps } from "@xcomponents2/icon";
 import ProgressCircle from "@xcomponents2/progress-circle";
 import {
   stylex,

@@ -8,13 +8,13 @@ import {
   createMemo,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import Icon, { type Props as IconProps } from "@xcomponents2/icon";
+import { Icon, IconProps } from "@xcomponents2/icon";
 import ProgressCircle from "@xcomponents2/progress-circle";
 import {
   stylex,
   type StylexDefinition,
   mergeStylexDefinitions,
-} from "@stylex/solid";
+} from "@stylex3/solid";
 import { Button, type ButtonApi, ButtonProps } from "@xcomponents2/button";
 false && stylex;
 
@@ -31,25 +31,10 @@ type Options = { value: string; label: string }[];
 type Selected = string | null;
 
 export type MenuConstructor = {
-  ref?: (api: MenuApi) => void;
   options: Options;
   selected?: Selected;
   "pt:root"?: StylexDefinition;
   "pt:item"?: ButtonProps;
-};
-
-type MenuItemInterface = {
-  construcotr: {
-    option: Options[number];
-    selected?: boolean;
-    onSelect: () => void;
-    ref: (api: MenuItemInterface["api"]) => void;
-    "pt:item"?: ButtonProps;
-  };
-  api: {
-    setSelected: (value: boolean) => void;
-    get selected(): boolean;
-  };
 };
 
 export type MenuEvents = {
@@ -164,56 +149,11 @@ export function Menu(props: MenuProps): JSX.Element {
           option={option}
           onSelect={handleMenChange.bind(null, option.value)}
           {...(selected === option.value && { selected: true })}
-          {...constructor["pt:item"] && {
+          {...(constructor["pt:item"] && {
             "pt:item": constructor["pt:item"],
-          }}
+          })}
         />
       ))}
     </div>
-  );
-}
-
-function MenuItem(props: MenuItemInterface["construcotr"]): JSX.Element {
-  // let button: ButtonApi;
-  let selected: boolean = props.selected ?? false;
-  const [rSelectedState, setRSelectedState] = createSignal(selected);
-
-  const api: MenuItemInterface["api"] = {
-    setSelected(value: boolean) {
-      selected = value;
-      setRSelectedState(value);
-    },
-    get selected() {
-      return selected;
-    },
-  };
-
-  onMount(() => {
-    props.ref?.(api);
-  });
-
-  let key = 1;
-  const refreshKey = createMemo(() => {
-    rSelectedState();
-    return key++;
-  });
-
-  return (
-    <Show when={refreshKey()} keyed>
-      <Button
-        label={props.option.label}
-        onClick={() => {
-          props.onSelect();
-        }}
-        pt:root={{
-          border: "none",
-          borderRadius: "0",
-          padding: "8px 12px",
-          backgroundColor: [[":hover", "#cecece"], "#fff"],
-        }}
-        startIcon={rSelectedState() ? "lucide:check" : "empty"}
-        {...props["pt:item"]}
-      />
-    </Show>
   );
 }

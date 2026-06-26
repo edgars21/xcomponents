@@ -11,7 +11,7 @@
     "cdn/**/*"
   ],
   "dependencies": {
-    "@stylex/solid": "file:../../../13.18_v3-stylex/packages/solid/"
+    "@stylex3/solid": "file:../../../13.18_v3-stylex/packages/solid/"
   },
   "devDependencies": {
     "esbuild-plugin-solid": "^0.6.0",

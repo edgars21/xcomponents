@@ -55,6 +55,7 @@ export function MultiSelect<T extends ToggleInterface>(
   const initSelectedItem = constructor.value
     ? (getOption(constructor.options, constructor.value) as Item<T>)
     : null;
+
   const items: Item<T>[] = constructor.options.map((option) => option as Item<T>);
   let selectedItem: Item<T> | null = initSelectedItem;
 
@@ -93,6 +94,7 @@ export function MultiSelect<T extends ToggleInterface>(
   return items.map((item) => {
     const itemProps = { ...constructor["pt:item"]?.props, ...item["pt:item"] };
     return MultiSelectItem({
+      ...item.value === constructor.value ? { selected: true } : {},
       component: {function: constructor["pt:item"].function, props: itemProps},
       api: (api) => {
         item.api = api;

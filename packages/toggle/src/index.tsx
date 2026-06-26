@@ -1,5 +1,5 @@
-import { type JSX, onMount } from "solid-js";
-import { stylex, mergeStylexDefinitions } from "@stylex/solid";
+import { type JSX } from "solid-js";
+import { stylex } from "@stylex/solid";
 import {
   type ComponentInterface,
   type ComponentProps,
@@ -77,7 +77,6 @@ export function Toggle<T extends TogglableComponentInterface>(
 
 
   function setToggleAttributeOnElement(value: boolean) {
-    
     const toggleAttributeName = constructor.toggleAttributeName ?? "toggled";
     const element = togglabeleComponentApi["pt:root"];
     if (value) {
@@ -87,15 +86,18 @@ export function Toggle<T extends TogglableComponentInterface>(
     }
   }
 
-  onMount(() => {
+  function customOnMount() {
+    setToggleAttributeOnElement(toggled);
     setApi?.(api);
-  });
+
+  }
 
   return props.child.function({
     ...props.child.props,
     api: (api) => {
       togglabeleComponentApi = api;
       props.child.props.api?.(api);
+      customOnMount();
     },
     onClick: (e: Event) => {
       props.child.props.onClick?.(e);

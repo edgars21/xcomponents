@@ -59,6 +59,7 @@ export function MultiSelectItem<T extends ToggleInterface>(
   return (
     <Show when={rRefreshCompnent()} keyed>
       {props.component.function({
+        toggled: constructor.selected,
         toggleAttributeName: "selected",
         ...props.component.props,
         api: (api) => {

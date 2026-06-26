@@ -164,6 +164,7 @@ export function IconButtonSegments(props: IconButtonSegmentsProps): JSX.Element 
       )}
     >
       {MultiSelect({
+        value: constructor.value,
         options: constructor.options,
         "pt:item": {
           function: ToggleIconButton,

@@ -128,8 +128,6 @@ export function Menu(props: MenuProps): JSX.Element {
     props.ref?.(api);
   });
 
-  console.log("menu has pt:root", constructor["pt:root"]);
-
   return (
     // @ts-ignore
     <div

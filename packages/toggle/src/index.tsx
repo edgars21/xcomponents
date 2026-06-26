@@ -31,6 +31,7 @@ export type ToggleInterface = ComponentInterface<
 
 export type ToggleConstructor = {
   toggled?: boolean;
+  toggleAttributeName?: string;
 };
 
 export type ToggleEvents = {
@@ -74,12 +75,15 @@ export function Toggle<T extends TogglableComponentInterface>(
     },
   };
 
+
   function setToggleAttributeOnElement(value: boolean) {
+    
+    const toggleAttributeName = constructor.toggleAttributeName ?? "toggled";
     const element = togglabeleComponentApi["pt:root"];
     if (value) {
-      element.setAttribute("toggled", "");
+      element.setAttribute(toggleAttributeName, "");
     } else {
-      element.removeAttribute("toggled");
+      element.removeAttribute(toggleAttributeName);
     }
   }
 

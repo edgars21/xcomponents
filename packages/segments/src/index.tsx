@@ -54,8 +54,12 @@ export function Segments(props: SegmentsProps): JSX.Element {
     ...itemPropsWithoutExtarcted,
     "pt:root": mergeStylexDefinitions(
       {
-        backgroundColor: [[":hover", "#ccc"],"transparent"],
-        border: "none"
+        backgroundColor: [
+          ["@selected", "oklch(0.7 0 0)"],
+          [":hover", "#ccc"],
+          "transparent",
+        ],
+        border: "none",
       },
       extractedPtItem,
     ),

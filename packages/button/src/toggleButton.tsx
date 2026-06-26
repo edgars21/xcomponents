@@ -28,7 +28,7 @@ export function ToggleButton(props: ToggleButtonProps): JSX.Element {
   const { constructor, events, setApi } =
     splitComponentProps<ToggleButtonInterface>(props);
   const [toggleConstructor, buttonConstructor] = splitProps(constructor, [
-    "toggled",
+    "toggled", "toggleAttributeName"
   ]);
   const [toggleEvents, buttonEvents] = splitProps(events, ["onToggle"]);
   const {
@@ -92,7 +92,7 @@ export function ToggleIconButton(props: ToggleIconButtonProps): JSX.Element {
   const { constructor, events, setApi } =
     splitComponentProps<ToggleIconButtonInterface>(props);
   const [toggleConstructor, buttonConstructor] = splitProps(constructor, [
-    "toggled",
+    "toggled", "toggleAttributeName"
   ]);
   const [toggleEvents, buttonEvents] = splitProps(events, ["onToggle"]);
   const {

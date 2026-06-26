@@ -75,7 +75,6 @@ export function MultiSelect<T extends ToggleInterface>(
       selectedItem.api.setSelected(false);
     }
     selectedItem = item;
-    console.log("all items should have api assinged:", items);
     selectedItem.api.setSelected(true);
   }
 
@@ -96,11 +95,9 @@ export function MultiSelect<T extends ToggleInterface>(
     return MultiSelectItem({
       component: {function: constructor["pt:item"].function, props: itemProps},
       api: (api) => {
-        console.log("assinging api to item:", item, api);
         item.api = api;
       },
       onSelect: () => {
-        console.log("onSelect called for item:", item);
         setSelectedItem(item);
         eventHandlers.onSelect(item.value);
       },

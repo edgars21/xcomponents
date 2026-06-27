@@ -354,10 +354,6 @@ export function TextInput(props: TextInputProps): JSX.Element {
             />
           </Show>
         )}
-        {constructor.endSlot}
-        {constructor.endIcon && (
-          <Icon pt:root={{ flexShrink: 0 }} name={constructor.endIcon} />
-        )}
         {constructor.endLabel && (
           <div
             use:stylex={{
@@ -369,6 +365,10 @@ export function TextInput(props: TextInputProps): JSX.Element {
             {constructor.endLabel}
           </div>
         )}
+        {constructor.endIcon && (
+          <Icon pt:root={{ flexShrink: 0 }} name={constructor.endIcon} />
+        )}
+        {constructor.endSlot}
         <Show when={rLoadinState()}>
           <ProgressCircle
             stylex={{

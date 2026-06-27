@@ -104,8 +104,9 @@ type RequiredProps<T> = {
 };
 
 export function Popper(props: PopperProps) {
-  const untrackedProps = untrack(() => props);
+  const untrackedProps = {...props}
   const constructorProps = untrackedProps as PopperConstructor;
+
   const constructor = setDefaults(constructorProps, {
     ref: null,
     placement: "bottom",

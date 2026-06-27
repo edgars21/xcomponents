@@ -1,0 +1,35 @@
+{
+  "name": "@xcomponents2/dropdown-menu",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": "Edgars Snepsts",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "cdn/**/*"
+  ],
+  "dependencies": {
+    "@stylex3/solid": "file:../../../13.18_v3-stylex/packages/solid/",
+    "@xcomponents2/icon": "^0.1.0",
+    "@xcomponents2/progress-circle": "^0.1.0",
+    "@xcomponents2/shared": "^0.1.0",
+    "@xcomponents2/dropdown": "^0.1.0",
+    "@xcomponents2/menu": "^0.1.0",
+    "solid-transition-group": "^0.3.0"
+  },
+  "devDependencies": {
+    "esbuild-plugin-solid": "^0.6.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.9"
+  }
+}

@@ -12,6 +12,11 @@ import {
   mergeStylexDefinitions,
 } from "@stylex/solid";
 import { Button,  ButtonProps } from "@xcomponents2/button";
+import {
+  type ComponentInterface,
+  type ComponentProps,
+  splitComponentProps,
+} from "@xcomponents2/shared/component";
 false && stylex;
 
 declare module "solid-js" {
@@ -22,30 +27,19 @@ declare module "solid-js" {
   }
 }
 
-export type MenuProps = MenuConstructor & Partial<MenuEvents>;
-type Options = { value: string; label: string }[];
-type Selected = string | null;
+export type MenuProps = ComponentProps<MenuInterface>;
+
+export type MenuInterface = ComponentInterface<
+  MenuConstructor,
+  MenuEvents,
+  MenuApi
+>;
 
 export type MenuConstructor = {
-  ref?: (api: MenuApi) => void;
   options: Options;
   selected?: Selected;
   "pt:root"?: StylexDefinition;
   "pt:item"?: ButtonProps;
-};
-
-type MenuItemInterface = {
-  construcotr: {
-    option: Options[number];
-    selected?: boolean;
-    onSelect: () => void;
-    ref: (api: MenuItemInterface["api"]) => void;
-    "pt:item"?: ButtonProps;
-  };
-  api: {
-    setSelected: (value: boolean) => void;
-    get selected(): boolean;
-  };
 };
 
 export type MenuEvents = {
@@ -57,6 +51,10 @@ export interface MenuApi {
   setSelected: (value: Selected) => void;
   get selected(): Selected;
 }
+
+type Options = { value: string; label: string }[];
+type Selected = string | null;
+
 
 function getItemApi(
   value: Selected,
@@ -71,21 +69,15 @@ function getItemApi(
 }
 
 export function Menu(props: MenuProps): JSX.Element {
-  const [constructor, elementAttributesAndEventListeners] = splitProps(props, [
-    "ref",
-    "selected",
-    "pt:root",
-    "pt:item",
-    "options",
-  ]);
+  const { constructor, events, setApi } =
+    splitComponentProps<MenuInterface>(props);
+
 
   let rootElement: HTMLInputElement;
   let selected: Selected = constructor.selected ?? null;
   let previousSelected: Selected = selected;
 
   const [rSelectedState, setrSelectedState] = createSignal<Selected>(selected);
-
-  const events: Partial<MenuEvents> = props as Partial<MenuEvents>;
 
   const items: MenuItemInterface["api"][] = [];
 
@@ -136,7 +128,7 @@ export function Menu(props: MenuProps): JSX.Element {
   }
 
   onMount(() => {
-    props.ref?.(api);
+    setApi?.(api);
   });
 
   return (
@@ -166,6 +158,20 @@ export function Menu(props: MenuProps): JSX.Element {
     </div>
   );
 }
+
+type MenuItemInterface = {
+  construcotr: {
+    option: Options[number];
+    selected?: boolean;
+    onSelect: () => void;
+    ref: (api: MenuItemInterface["api"]) => void;
+    "pt:item"?: ButtonProps;
+  };
+  api: {
+    setSelected: (value: boolean) => void;
+    get selected(): boolean;
+  };
+};
 
 function MenuItem(props: MenuItemInterface["construcotr"]): JSX.Element {
   // let button: ButtonApi;
